@@ -1,15 +1,22 @@
 import type { Grade } from "../api/types";
 
 /**
- * Topic suggestions shown after a grade is picked. Static for phase 1; aligned loosely
- * with common DepEd K-12 elementary topics. Replace with an API call
- * (e.g. GET /suggestions?grade=4) if you want them data-driven.
+ * Topic chips shown after a grade is picked.
+ *
+ * IMPORTANT: the Lesson Pack API only writes lessons for topics that exist in the
+ * curriculum library (blob container `lessons`, files like g4-science-photosynthesis.md).
+ * A chip for a topic that isn't there produces an "unavailable" pack, so list ONLY
+ * topics that are in the library. Better still, replace this with an API call
+ * (e.g. GET /topics?grade=4) built from the library index.
+ *
+ * Only topics confirmed in the library so far are listed; add the rest from the
+ * `lessons` container.
  */
 export const SUGGESTIONS: Record<Grade, string[]> = {
-  1: ["Parts of the body", "Counting to 100", "My family", "Shapes around us"],
-  2: ["Addition with regrouping", "Living and non-living things", "Telling time", "Community helpers"],
-  3: ["Fractions", "Multiplication", "Parts of a plant", "Weather"],
-  4: ["Photosynthesis", "Parts of a plant", "Food chains", "States of matter"],
-  5: ["Decimals", "Reproductive parts of a flower", "Weathering and erosion", "Philippine regions"],
-  6: ["Ratio and proportion", "Solar system", "Circulatory system", "Philippine Revolution"],
+  1: [],
+  2: ["Parts of a plant"],
+  3: [],
+  4: ["Photosynthesis"],
+  5: [],
+  6: [],
 };

@@ -57,6 +57,8 @@ export interface PackSummary {
   grade: Grade;
   status: PackStatus;
   createdAt: string; // ISO
+  /** Set on failed packs: "unavailable" = topic not in the curriculum library. */
+  failureKind?: "unavailable" | "error";
 }
 
 export interface Pack extends PackSummary {
@@ -75,6 +77,11 @@ export interface Pack extends PackSummary {
   issues: ReviewIssue[];
   /** Plain-language reason, only when status is "failed". */
   failureReason?: string;
+  /**
+   * Why it failed: "unavailable" means the topic isn't in the curriculum library
+   * (grounding found nothing), so the teacher should pick another topic, not retry.
+   */
+  failureKind?: "unavailable" | "error";
 }
 
 export interface NewPackRequest {

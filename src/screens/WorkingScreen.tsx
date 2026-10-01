@@ -29,6 +29,7 @@ export function WorkingScreen() {
   }
 
   if (pack.status === "failed") {
+    const notInLibrary = pack.failureKind === "unavailable";
     return (
       <>
         <main className="screen">
@@ -36,14 +37,17 @@ export function WorkingScreen() {
             <span className="icon-badge warn">
               <Icon name="alert" />
             </span>
-            <h1 className="title">{t.failedTitle}</h1>
-            <p className="sub">{pack.failureReason ?? t.failedDefault}</p>
+            <h1 className="title">{notInLibrary ? t.unavailableTitle : t.failedTitle}</h1>
+            <p className="sub">{pack.failureReason ?? (notInLibrary ? t.unavailableDefault : t.failedDefault)}</p>
             <button
               type="button"
               className="btn"
-              onClick={() => navigate("/new", { state: { topic: pack.topic, grade: pack.grade } })}
+              onClick={() =>
+                // Not in the library: start fresh with the same grade. Error: retry the same topic.
+                navigate("/new", { state: notInLibrary ? { grade: pack.grade } : { topic: pack.topic, grade: pack.grade } })
+              }
             >
-              {t.tryAgain}
+              {notInLibrary ? t.tryAnotherTopic : t.tryAgain}
             </button>
           </div>
         </main>

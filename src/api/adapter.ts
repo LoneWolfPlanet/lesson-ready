@@ -56,6 +56,9 @@ const STATUS_MAP: Record<string, PackStatus> = {
   failed: "failed",
   error: "failed",
   cancelled: "failed",
+  // Grounding found no curriculum document for the topic/grade (see failureKind).
+  unavailable: "failed",
+  not_found: "failed",
 };
 
 /** teacher.packStatus / review.verdict values that mean "teacher should check first". */
@@ -229,6 +232,7 @@ export function toPackSummary(json: unknown, fallback: PackFallback = {}): PackS
     grade: grade !== undefined ? toGrade(grade) : (fallback.grade ?? 1),
     status: toStatus(raw),
     createdAt: str(raw.createdAt, raw.created_at, fallback.createdAt) || new Date().toISOString(),
+    ...(key(raw.status) === "unavailable" ? { failureKind: "unavailable" as const } : {}),
   };
 }
 
@@ -249,6 +253,9 @@ export function toPack(json: unknown, fallback: PackFallback = {}): Pack {
   if (status === "ready" && flaggedByApi) status = "check";
 
   const error = raw.error;
+  const unavailable =
+    status === "failed" &&
+    (key(raw.status) === "unavailable" || key(teacher.packStatus) === "unavailable" || key(lesson.groundingStatus) === "not_found");
   return {
     ...summary,
     status,
@@ -264,7 +271,10 @@ export function toPack(json: unknown, fallback: PackFallback = {}): Pack {
     issues,
     // Only a field meant for teachers is shown; raw error text is often technical,
     // so it goes to the console and the screen shows the friendly default.
-    failureReason: str(obj(error).userMessage, obj(error).user_message) || logError(summary.id, error),
+    failureReason: unavailable
+      ? str(teacher.teacherOverview) || undefined
+      : str(obj(error).userMessage, obj(error).user_message) || logError(summary.id, error),
+    failureKind: status === "failed" ? (unavailable ? "unavailable" : "error") : undefined,
   };
 }
 

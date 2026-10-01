@@ -101,7 +101,7 @@ export function MyPacksScreen() {
               <Link to={p.status === "working" || p.status === "failed" ? `/packs/${p.id}/working` : `/packs/${p.id}`} className="pack">
                 <div className="row">
                   <span className="t">{p.topic}</span>
-                  <StatusPill status={p.status} />
+                  <StatusPill status={p.status} notInLibrary={p.failureKind === "unavailable"} />
                 </div>
                 <div className="row start gap-sm">
                   <span className="m">

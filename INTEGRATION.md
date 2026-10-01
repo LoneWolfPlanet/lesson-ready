@@ -155,7 +155,7 @@ The app is wired to the deployed API's OpenAPI:
 
 | Screen | From |
 |---|---|
-| Status pill | `status`: `running` → being written, `ready` → Ready to use, `ready_with_notes` → Check before use, `failed` → couldn't finish. Unknown values are classified by pattern (e.g. `*fail*` → failed, `ready*` → ready, anything with a `result` → finished) and logged as a console warning so you can add them to `STATUS_MAP`. Polling also stops after `max(20, 10 × VITE_EXPECTED_MINUTES)` minutes, with a "Check again" button. A `ready` pack becomes **Check before use** if `result.teacher.packStatus` or `result.review.verdict` says so, or if there are any issues. |
+| Status pill | `status`: `running` → being written, `ready` → Ready to use, `ready_with_notes` → Check before use, `unavailable` (topic not in the curriculum library; `teacher.teacherOverview` is shown) → "This topic isn't in our library yet" with **Try another topic**, `failed` → couldn't finish. Unknown values are classified by pattern (e.g. `*fail*` → failed, `ready*` → ready, anything with a `result` → finished) and logged as a console warning so you can add them to `STATUS_MAP`. Polling also stops after `max(20, 10 × VITE_EXPECTED_MINUTES)` minutes, with a "Check again" button. A `ready` pack becomes **Check before use** if `result.teacher.packStatus` or `result.review.verdict` says so, or if there are any issues. |
 | "Reviewed ✓" | `result.review.verdict == "approved"` with no issues |
 | Lesson tab | `result.teacher.teacherOverview`, `result.lesson.learningObjectives`, `sections[{title, body}]`, `activity{title, materials, steps}`, `vocabulary[{term, definition}]` |
 | Quiz tab / Quiz mode | `result.quiz.questions[{id, question, options, correctIndex, explanation}]` |
@@ -165,6 +165,7 @@ The app is wired to the deployed API's OpenAPI:
 
 - **Failed packs:** `error` text is logged to the console, not shown. Teachers see the friendly default unless the API sends `error.userMessage`.
 - **Grades:** the API accepts 1–12; the app offers 1–6.
+- **Topic chips** (`src/data/suggestions.ts`) must list only topics in the curriculum library (`lessons` container); any other topic comes back `unavailable`. A `GET /topics?grade=N` endpoint built from the library would keep them in sync automatically.
 - **Not yet confirmed:** the shape of `review.issues`, since your sample had none. The adapter reads `message`, `description` or `summary`, plus `questionId`. Check the first flagged pack.
 
 The generic contract below is the original assumption, kept for reference. Where it differs, the table above wins.

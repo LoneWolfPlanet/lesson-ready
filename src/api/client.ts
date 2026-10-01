@@ -91,8 +91,8 @@ export const packsApi = {
   },
 };
 
-function toSummary({ id, topic, grade, status, createdAt }: Pack): PackSummary {
-  return { id, topic, grade, status, createdAt };
+function toSummary({ id, topic, grade, status, createdAt, failureKind }: Pack): PackSummary {
+  return { id, topic, grade, status, createdAt, failureKind };
 }
 
 function offlineList(): PackSummary[] {

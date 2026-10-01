@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
-import { OfflineBanner, Spinner } from "./components/ui";
+import { DemoBanner, OfflineBanner, Spinner } from "./components/ui";
 import { MyPacksScreen } from "./screens/MyPacksScreen";
 import { NewPackScreen } from "./screens/NewPackScreen";
 import { PackScreen } from "./screens/PackScreen";
@@ -19,6 +19,7 @@ function RequireSignIn() {
 export function App() {
   return (
     <div className="app">
+      <DemoBanner />
       <OfflineBanner />
       <Routes>
         <Route path="/welcome" element={<WelcomeScreen />} />

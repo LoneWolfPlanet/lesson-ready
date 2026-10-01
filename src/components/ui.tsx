@@ -3,6 +3,7 @@ import type { ApiError } from "../api/http";
 import type { PackStatus } from "../api/types";
 import { useOnline } from "../hooks/usePack";
 import { useUi } from "../i18n/UiContext";
+import { config } from "../config";
 import { Icon } from "./Icon";
 
 export function LangToggle() {
@@ -19,8 +20,9 @@ export function LangToggle() {
   );
 }
 
-export function StatusPill({ status }: { status: PackStatus }) {
+export function StatusPill({ status, notInLibrary }: { status: PackStatus; notInLibrary?: boolean }) {
   const { t } = useUi();
+  if (status === "failed" && notInLibrary) return <span className="pill fail">{t.statusUnavailable}</span>;
   const map: Record<PackStatus, [string, string]> = {
     ready: ["ok", t.statusReady],
     check: ["warn", t.statusCheck],
@@ -92,6 +94,17 @@ export function Spinner() {
         <i />
       </span>
       <span className="sr-only">{t.loading}</span>
+    </div>
+  );
+}
+
+/** Shown whenever sign-in or the API is mocked, so a mock build is never mistaken for the real app. */
+export function DemoBanner() {
+  if (config.auth.mode !== "mock" && config.api.mode !== "mock") return null;
+  const parts = [config.auth.mode === "mock" && "sign-in", config.api.mode === "mock" && "packs"].filter(Boolean).join(" + ");
+  return (
+    <div className="demo-banner" role="note">
+      Demo mode · sample data ({parts} mocked)
     </div>
   );
 }

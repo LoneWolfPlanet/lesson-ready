@@ -379,6 +379,15 @@ a {
   color: var(--dark-fg);
   font-size: var(--text-sm);
 }
+.demo-banner {
+  background: var(--mark);
+  color: var(--dark);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px var(--gutter);
+  padding-top: calc(4px + env(safe-area-inset-top, 0px));
+}
 .error-box {
   display: grid;
   grid-template-columns: auto 1fr;
