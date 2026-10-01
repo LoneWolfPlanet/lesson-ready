@@ -22,6 +22,20 @@ jobs:
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
+        env:
+          # Vite bakes these into the app at build time. None are secrets:
+          # they all end up in the browser bundle.
+          VITE_AUTH_MODE: msal
+          VITE_AUTH_CLIENT_ID: b455b786-584b-46f2-9770-a76439b6b87d
+          VITE_AUTH_AUTHORITY: https://lessongenerator.ciamlogin.com/7f5fb7f1-9b56-441e-9d25-bd32475e5aa1/
+          VITE_AUTH_KNOWN_AUTHORITY: lessongenerator.ciamlogin.com
+          VITE_AUTH_REDIRECT_PATH: /redirect.html
+          VITE_AUTH_GOOGLE_ENABLED: "false"
+          VITE_API_MODE: http
+          VITE_API_BASE_URL: https://ca-lessonpack-api.jollypond-8ff5b247.westus2.azurecontainerapps.io
+          VITE_API_SCOPES: api://a73895da-571e-4738-bbfd-44354c0077a7/Packs.ReadWrite
+          VITE_EXPECTED_MINUTES: "1"
+          VITE_POLL_SECONDS: "5"
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_HAPPY_SAND_0AC74A51E }}
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
