@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Signing you in…</title>
+    <style>
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center;
+             font: 16px system-ui, sans-serif; background: #f7f6f2; color: #1b2420; }
+    </style>
+  </head>
+  <body>
+    <p>Signing you in…</p>
+    <!--
+      MSAL v5 redirect bridge. External ID sends the sign-in response here
+      (this page's URL is the app registration's redirect URI). The bridge
+      stores the response and returns to the page that started sign-in,
+      where handleRedirectPromise() finishes it.
+    -->
+    <script type="module" src="/src/auth/redirectBridge.ts"></script>
+  </body>
+</html>

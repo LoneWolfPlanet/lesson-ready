@@ -1,0 +1,265 @@
+{
+ "id": "6269b52e-6040-4b25-b3c4-9ee69ed3a215",
+ "status": "ready",
+ "topic": "Photosynthesis",
+ "grade": 4,
+ "createdAt": "2026-10-01T03:42:22.489453Z",
+ "updatedAt": "2026-10-01T03:43:23.315715Z",
+ "error": null,
+ "result": {
+  "requestId": "6269b52e-6040-4b25-b3c4-9ee69ed3a215",
+  "status": "ready",
+  "attempts": 1,
+  "plan": {
+   "mode": "plan",
+   "status": "planned",
+   "topic": "Photosynthesis",
+   "grade": 4,
+   "questionCount": 5,
+   "clarification": null,
+   "notes": "",
+   "writerNotes": ""
+  },
+  "lesson": {
+   "requestId": "6269b52e-6040-4b25-b3c4-9ee69ed3a215",
+   "taskId": "6269b52e-6040-4b25-b3c4-9ee69ed3a215:writer:1",
+   "agent": "curriculum-writer",
+   "topic": "Photosynthesis",
+   "grade": 4,
+   "groundingStatus": "grounded",
+   "learningObjectives": [
+    "Explain that plants make their own food using sunlight, water, and air.",
+    "Name the three things a plant needs for photosynthesis: sunlight, water, and carbon dioxide.",
+    "Describe what plants give off during photosynthesis: oxygen.",
+    "Identify the leaf as the main place where photosynthesis happens."
+   ],
+   "sections": [
+    {
+     "title": "What is Photosynthesis?",
+     "body": "Have you ever wondered how plants eat? Plants do not eat like animals. They make their own food using sunlight, water, and air. This process is called photosynthesis."
+    },
+    {
+     "title": "How Do Plants Make Food?",
+     "body": "Plants take water from the soil through their roots. They get carbon dioxide, a gas, from the air through tiny holes in their leaves called stomata. The green part inside leaves, called chlorophyll, catches sunlight. The plant uses sunlight's energy to turn water and carbon dioxide into sugar, which is its food."
+    },
+    {
+     "title": "What Do Plants Give Off?",
+     "body": "While making food, plants give off oxygen into the air. This oxygen is what people and animals need to breathe. So, plants help us by making food and fresh air!"
+    },
+    {
+     "title": "Common Misconceptions About Photosynthesis",
+     "body": "Some people think plants get their food from the soil, but soil only gives water and minerals. Plants actually make their food in their leaves. Also, plants take in carbon dioxide, not oxygen, during photosynthesis. And only green leaves with chlorophyll can catch sunlight well."
+    },
+    {
+     "title": "Let's Remember",
+     "body": "Photosynthesis means plants use sunlight, water, and carbon dioxide to make sugar for food and give off oxygen. Leaves are the main place where this happens. Without sunlight, plants cannot make food and will get weak."
+    }
+   ],
+   "vocabulary": [
+    {
+     "term": "Photosynthesis",
+     "definition": "How green plants make their own food using sunlight."
+    },
+    {
+     "term": "Chlorophyll",
+     "definition": "The green stuff inside leaves that catches sunlight."
+    },
+    {
+     "term": "Carbon dioxide",
+     "definition": "A gas in the air that plants take in through their leaves."
+    },
+    {
+     "term": "Oxygen",
+     "definition": "A gas plants give off that people and animals need to breathe."
+    },
+    {
+     "term": "Stomata",
+     "definition": "Tiny openings on the underside of leaves that let air in and out."
+    }
+   ],
+   "activity": {
+    "title": "Leaf Cover Experiment",
+    "materials": [
+     "A potted plant with green leaves",
+     "Small piece of foil"
+    ],
+    "steps": [
+     "Cover one leaf of the plant with a small piece of foil.",
+     "Leave the plant in sunlight for one week.",
+     "Observe and compare the covered leaf with the uncovered leaves.",
+     "Ask yourself: What changed? Why do you think this happened?"
+    ]
+   },
+   "notes": "The lesson uses a simple experiment and everyday examples like plants we eat to connect learning to daily life."
+  },
+  "quiz": {
+   "requestId": "6269b52e-6040-4b25-b3c4-9ee69ed3a215",
+   "taskId": "6269b52e-6040-4b25-b3c4-9ee69ed3a215:quiz:1",
+   "agent": "quiz-maker",
+   "topic": "Photosynthesis",
+   "grade": 4,
+   "status": "completed",
+   "questions": [
+    {
+     "id": "q1",
+     "type": "multiple_choice",
+     "difficulty": "recall",
+     "question": "What three things do plants use to make their own food?",
+     "options": [
+      "Sunlight, soil, and oxygen",
+      "Soil, water, and air",
+      "Water, oxygen, and soil",
+      "Sunlight, water, and air"
+     ],
+     "correctIndex": 3,
+     "explanation": "Plants make their own food using sunlight, water, and air. This process is called photosynthesis.",
+     "objective": "Explain that plants make their own food using sunlight, water, and air.",
+     "sourceSection": "What is Photosynthesis?"
+    },
+    {
+     "id": "q2",
+     "type": "multiple_choice",
+     "difficulty": "recall",
+     "question": "Which gas do plants take in through tiny holes in their leaves?",
+     "options": [
+      "Hydrogen",
+      "Carbon dioxide",
+      "Nitrogen",
+      "Oxygen"
+     ],
+     "correctIndex": 1,
+     "explanation": "Plants take in carbon dioxide through tiny holes called stomata in their leaves.",
+     "objective": "Name the three things a plant needs for photosynthesis: sunlight, water, and carbon dioxide.",
+     "sourceSection": "How Do Plants Make Food?"
+    },
+    {
+     "id": "q3",
+     "type": "multiple_choice",
+     "difficulty": "understand",
+     "question": "Why do plants give off oxygen during photosynthesis?",
+     "options": [
+      "Because animals need oxygen to breathe",
+      "Because oxygen helps plants grow roots",
+      "Because oxygen makes leaves green",
+      "Because plants need oxygen to eat"
+     ],
+     "correctIndex": 0,
+     "explanation": "Plants give off oxygen, which people and animals need to breathe, while making food.",
+     "objective": "Describe what plants give off during photosynthesis: oxygen.",
+     "sourceSection": "What Do Plants Give Off?"
+    },
+    {
+     "id": "q4",
+     "type": "multiple_choice",
+     "difficulty": "recall",
+     "question": "Where does photosynthesis mainly happen in a plant?",
+     "options": [
+      "Stem",
+      "Flowers",
+      "Leaves",
+      "Roots"
+     ],
+     "correctIndex": 2,
+     "explanation": "Photosynthesis mainly happens in the leaves where chlorophyll catches sunlight.",
+     "objective": "Identify the leaf as the main place where photosynthesis happens.",
+     "sourceSection": "Common Misconceptions About Photosynthesis"
+    },
+    {
+     "id": "q5",
+     "type": "multiple_choice",
+     "difficulty": "understand",
+     "question": "Some people think plants get food from soil. What is true?",
+     "options": [
+      "Plants eat oxygen from soil",
+      "Plants make food in leaves, soil gives water and minerals",
+      "Plants get food only from soil",
+      "Soil gives plants sunlight"
+     ],
+     "correctIndex": 1,
+     "explanation": "Plants make food in their leaves using sunlight, water, and carbon dioxide; soil only provides water and minerals.",
+     "objective": "Explain that plants make their own food using sunlight, water, and air.",
+     "sourceSection": "Common Misconceptions About Photosynthesis"
+    }
+   ],
+   "notes": ""
+  },
+  "review": {
+   "requestId": "6269b52e-6040-4b25-b3c4-9ee69ed3a215",
+   "taskId": "6269b52e-6040-4b25-b3c4-9ee69ed3a215:review:1",
+   "agent": "reviewer",
+   "topic": "Photosynthesis",
+   "grade": 4,
+   "questionChecks": [
+    {
+     "id": "q1",
+     "markedAnswer": "Sunlight, water, and air",
+     "answerIsCorrect": true,
+     "evidence": "They make their own food using sunlight, water, and air.",
+     "evidenceLocation": "What is Photosynthesis?",
+     "sourceSectionMatches": true,
+     "distractorsFromLesson": true
+    },
+    {
+     "id": "q2",
+     "markedAnswer": "Carbon dioxide",
+     "answerIsCorrect": true,
+     "evidence": "They get carbon dioxide, a gas, from the air through tiny holes in their leaves called stomata.",
+     "evidenceLocation": "How Do Plants Make Food?",
+     "sourceSectionMatches": true,
+     "distractorsFromLesson": true
+    },
+    {
+     "id": "q3",
+     "markedAnswer": "Because animals need oxygen to breathe",
+     "answerIsCorrect": true,
+     "evidence": "While making food, plants give off oxygen into the air. This oxygen is what people and animals need to breathe.",
+     "evidenceLocation": "What Do Plants Give Off?",
+     "sourceSectionMatches": true,
+     "distractorsFromLesson": true
+    },
+    {
+     "id": "q4",
+     "markedAnswer": "Leaves",
+     "answerIsCorrect": true,
+     "evidence": "Plants actually make their food in their leaves.",
+     "evidenceLocation": "Common Misconceptions About Photosynthesis",
+     "sourceSectionMatches": true,
+     "distractorsFromLesson": true
+    },
+    {
+     "id": "q5",
+     "markedAnswer": "Plants make food in leaves, soil gives water and minerals",
+     "answerIsCorrect": true,
+     "evidence": "Some people think plants get their food from the soil, but soil only gives water and minerals. Plants actually make their food in their leaves.",
+     "evidenceLocation": "Common Misconceptions About Photosynthesis",
+     "sourceSectionMatches": true,
+     "distractorsFromLesson": true
+    }
+   ],
+   "verdict": "approved",
+   "issues": [],
+   "summary": "The lesson and quiz are age-appropriate, safe, and consistent. All quiz answers match the lesson and each question's sourceSection contains supporting text. No blockers or majors found."
+  },
+  "decision": {
+   "mode": "revise",
+   "decision": "finalize",
+   "stopReason": null,
+   "revisions": [],
+   "openIssues": [],
+   "reasoning": "Rules 2-3 (code): no blocker or major issues.",
+   "notes": ""
+  },
+  "teacher": {
+   "packStatus": "ready",
+   "teacherOverview": "This lesson covers how plants make their own food through photosynthesis, focusing on the roles of sunlight, water, and carbon dioxide, and what plants give off during the process. It also clarifies common misconceptions and identifies the leaf as the main site of photosynthesis. The quiz includes 5 questions to check student understanding. The pack is ready for use.",
+   "teachingTips": [
+    "Prepare the Leaf Cover Experiment materials ahead of time to demonstrate how sunlight affects photosynthesis.",
+    "Pre-teach the vocabulary word 'stomata' to help students understand how plants take in carbon dioxide.",
+    "Ask students to explain why plants give off oxygen and how this benefits people and animals.",
+    "Watch for misconceptions that plants get their food from soil rather than making it in their leaves."
+   ],
+   "teacherWarnings": [],
+   "notes": ""
+  }
+ }
+}
