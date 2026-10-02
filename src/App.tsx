@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 import { DemoBanner, OfflineBanner, Spinner } from "./components/ui";
@@ -7,13 +8,27 @@ import { PackScreen } from "./screens/PackScreen";
 import { QuizModeScreen } from "./screens/QuizModeScreen";
 import { WelcomeScreen } from "./screens/WelcomeScreen";
 import { WorkingScreen } from "./screens/WorkingScreen";
+import { MaterialsScreen } from "./materials";
 
 function RequireSignIn() {
   const { status } = useAuth();
   const location = useLocation();
   if (status === "loading") return <Spinner />;
-  if (status === "signedOut") return <Navigate to="/welcome" replace state={{ from: location.pathname }} />;
+  if (status === "signedOut")
+    return (
+      <Navigate to="/welcome" replace state={{ from: location.pathname }} />
+    );
   return <Outlet />;
+}
+
+function MaterialsPage() {
+  const { getAccessToken } = useAuth();
+  const getToken = useCallback(async () => {
+    const token = await getAccessToken();
+    if (!token) throw new Error("Please sign in again.");
+    return token;
+  }, [getAccessToken]);
+  return <MaterialsScreen getToken={getToken} />;
 }
 
 export function App() {
@@ -29,6 +44,7 @@ export function App() {
           <Route path="/packs/:id" element={<PackScreen />} />
           <Route path="/packs/:id/working" element={<WorkingScreen />} />
           <Route path="/packs/:id/quiz" element={<QuizModeScreen />} />
+          <Route path="/materials" element={<MaterialsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/new" replace />} />
       </Routes>

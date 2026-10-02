@@ -21,6 +21,7 @@ interface AuthState {
   error: boolean;
   signIn(provider: SignInProvider): Promise<void>;
   signOut(): Promise<void>;
+  getAccessToken(): Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -55,31 +56,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(false);
     try {
       const u = await authService.signIn(provider);
-      if (u) {
-        setUser(u);
-        setStatus("signedIn");
-      }
+      setUser(u);
+      setStatus(u ? "signedIn" : "signedOut");
     } catch (e) {
       console.error("Sign-in failed", e);
       setError(true);
+      setStatus("signedOut");
     } finally {
       setBusy(false);
     }
   }, []);
 
   const signOut = useCallback(async () => {
-    // Packs belong to the teacher, not the device: clear them before signing out.
-    offlineCache.clear();
-    packIndex.clear();
-    await authService.signOut();
-    setUser(null);
-    setStatus("signedOut");
+    setBusy(true);
+    setError(false);
+    try {
+      // Packs belong to the teacher, not the device: clear them before signing out.
+      offlineCache.clear();
+      packIndex.clear();
+      await authService.signOut();
+      setUser(null);
+      setStatus("signedOut");
+    } catch (e) {
+      console.error("Sign-out failed", e);
+      setError(true);
+      setStatus("signedOut");
+    } finally {
+      setBusy(false);
+    }
   }, []);
 
+  // Same token source as the API client, so MSAL and mock mode both work.
+  const getAccessToken = useCallback(() => authService.getAccessToken(), []);
+
   const value = useMemo(
-    () => ({ status, user, busy, error, signIn, signOut }),
-    [status, user, busy, error, signIn, signOut],
+    () => ({ status, user, busy, error, signIn, signOut, getAccessToken }),
+    [status, user, busy, error, signIn, signOut, getAccessToken],
   );
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

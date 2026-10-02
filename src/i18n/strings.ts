@@ -97,6 +97,7 @@ const en = {
   // nav
   navNew: "New",
   navPacks: "My packs",
+  navMaterials: "Materials",
   // errors
   errOffline: "No connection. We'll retry automatically.",
   errSignin: "Please sign in again.",
@@ -198,6 +199,7 @@ const fil: Strings = {
   yesterday: "Kahapon",
   navNew: "Bago",
   navPacks: "Mga pack ko",
+  navMaterials: "Materyales",
   errOffline: "Walang koneksyon. Awtomatiko kaming susubok ulit.",
   errSignin: "Pakisign in ulit.",
   errNotFound: "Hindi namin makita ang pack na ito.",

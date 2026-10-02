@@ -45,6 +45,10 @@ export function BottomNav() {
         <Icon name="packs" size={22} />
         <span>{t.navPacks}</span>
       </NavLink>
+      <NavLink to="/materials" className={({ isActive }) => (isActive ? "on" : "")}>
+        <Icon name="packs" size={22} />
+        <span>{t.navMaterials}</span>
+      </NavLink>
     </nav>
   );
 }
