@@ -1,7 +1,6 @@
 import { config } from "../config";
 import { toCreateBody, toCreatedId, toLessonBody, toPack, toPackList, toPackSummary } from "./adapter";
 import { ApiError, request } from "./http";
-import { mockServer } from "./mockServer";
 import { offlineCache, packIndex } from "./offlineCache";
 import type { LessonDraft, NewPackRequest, Pack, PackSummary, QuizQuestion } from "./types";
 
@@ -18,11 +17,15 @@ const packPath = (id: string) => `/lesson-packs/${encodeURIComponent(id)}`;
 const questionPath = (packId: string, questionId: string) =>
   `${packPath(packId)}/quiz/questions/${encodeURIComponent(questionId)}`;
 
-async function raw<T>(mock: () => Promise<T>, real: () => Promise<T>): Promise<T> {
+type MockServer = (typeof import("./mockServer"))["mockServer"];
+/** The fake API is only downloaded in mock mode, so it never weighs on the real app. */
+const loadMock = () => import("./mockServer").then((m) => m.mockServer);
+
+async function raw<T>(mock: (server: MockServer) => Promise<T>, real: () => Promise<T>): Promise<T> {
   if (!useMock) return real();
   if (!navigator.onLine) throw new ApiError("offline", "No connection");
   try {
-    return await mock();
+    return await mock(await loadMock());
   } catch (e) {
     const status = (e as { status?: number }).status;
     const kind = status === 404 ? "notfound" : status === 422 ? "invalid" : status === 409 ? "conflict" : "server";
@@ -39,7 +42,7 @@ export const packsApi = {
   async create(req: NewPackRequest, { force = false }: { force?: boolean } = {}): Promise<string> {
     const body = toCreateBody(req, force);
     const json = await raw(
-      () => mockServer.create({ ...body, language: req.language }),
+      (m) => m.create({ ...body, language: req.language }),
       // No retry: the API can't de-duplicate, so a retried POST could start two packs.
       () => request<unknown>(CREATE_PATH, { method: "POST", body: JSON.stringify(body), retry: false }),
     );
@@ -53,7 +56,7 @@ export const packsApi = {
   async get(id: string): Promise<{ pack: Pack; fromCache: boolean }> {
     try {
       const json = await raw(
-        () => mockServer.get(id),
+        (m) => m.get(id),
         () => request<unknown>(packPath(id)),
       );
       // The response may omit topic/grade/date; fill them from the original request.
@@ -74,7 +77,7 @@ export const packsApi = {
   async updateQuestion(packId: string, q: QuizQuestion): Promise<Pack> {
     const body = questionBody(q);
     const json = await raw(
-      () => mockServer.updateQuestion(packId, q.id, body),
+      (m) => m.updateQuestion(packId, q.id, body),
       // PUT replaces the same question every time, so a retry is safe.
       () => request<unknown>(questionPath(packId, q.id), { method: "PUT", body: JSON.stringify(body) }),
     );
@@ -85,7 +88,7 @@ export const packsApi = {
   async addQuestion(packId: string, q: QuizQuestion): Promise<Pack> {
     const body = questionBody(q);
     const json = await raw(
-      () => mockServer.addQuestion(packId, body),
+      (m) => m.addQuestion(packId, body),
       // Not retried: a repeated POST would add the question twice.
       () => request<unknown>(`${packPath(packId)}/quiz/questions`, { method: "POST", body: JSON.stringify(body), retry: false }),
     );
@@ -95,7 +98,7 @@ export const packsApi = {
   /** Removes one question (a quiz keeps at least one). Returns the updated pack. */
   async removeQuestion(packId: string, questionId: string): Promise<Pack> {
     const json = await raw(
-      () => mockServer.removeQuestion(packId, questionId),
+      (m) => m.removeQuestion(packId, questionId),
       () => request<unknown>(questionPath(packId, questionId), { method: "DELETE" }),
     );
     return savedPack(packId, json);
@@ -105,7 +108,7 @@ export const packsApi = {
   async updateLesson(packId: string, draft: LessonDraft): Promise<Pack> {
     const body = toLessonBody(draft);
     const json = await raw(
-      () => mockServer.updateLesson(packId, body),
+      (m) => m.updateLesson(packId, body),
       () => request<unknown>(`${packPath(packId)}/lesson`, { method: "PUT", body: JSON.stringify(body) }),
     );
     return savedPack(packId, json);
@@ -115,7 +118,7 @@ export const packsApi = {
   async updateNotes(packId: string, notes: string[]): Promise<Pack> {
     const body = { teachingTips: notes.map((n) => n.trim()).filter(Boolean) };
     const json = await raw(
-      () => mockServer.updateNotes(packId, body),
+      (m) => m.updateNotes(packId, body),
       () => request<unknown>(`${packPath(packId)}/notes`, { method: "PUT", body: JSON.stringify(body) }),
     );
     return savedPack(packId, json);
@@ -128,7 +131,7 @@ export const packsApi = {
   async remove(packId: string): Promise<void> {
     try {
       await raw(
-        () => mockServer.remove(packId),
+        (m) => m.remove(packId),
         // DELETE is safe to repeat, so retries are fine.
         () => request<void>(packPath(packId), { method: "DELETE" }),
       );
@@ -142,42 +145,43 @@ export const packsApi = {
   /** The teacher's sign-off: true sets the pack to "Reviewed", false puts back the status it had. */
   async setReviewed(packId: string, reviewed: boolean): Promise<Pack> {
     const json = await raw(
-      () => mockServer.setReviewed(packId, reviewed),
+      (m) => m.setReviewed(packId, reviewed),
       () => request<unknown>(`${packPath(packId)}/review`, { method: "PUT", body: JSON.stringify({ reviewed }) }),
     );
     return savedPack(packId, json);
   },
 
-  /** Lists packs; when offline, lists what is saved on this device. */
+  /**
+   * The teacher's packs, newest first, from GET /lesson-packs (all their packs in Cosmos, from any
+   * device). Offline, it lists what is saved on this device. If the API is older and has no list
+   * endpoint, it falls back to the packs requested on this device.
+   */
   async list(): Promise<{ packs: PackSummary[]; fromCache: boolean }> {
-    if (useMock) {
-      try {
-        return { packs: toPackList(await raw(() => mockServer.list(), () => Promise.resolve(null))), fromCache: false };
-      } catch (e) {
-        if (e instanceof ApiError && e.kind === "offline") return { packs: offlineList(), fromCache: true };
-        throw e;
-      }
-    }
-
-    const entries = packIndex.all();
     if (!navigator.onLine) return { packs: offlineList(), fromCache: true };
-
-    // Finished packs come from the offline copy; only unfinished ones are re-checked.
-    const packs = await Promise.all(
-      entries.map(async (entry): Promise<PackSummary> => {
-        const cached = offlineCache.get(entry.id);
-        // Copies saved before subjects were tracked have no `subject` key; fetch those once more.
-        if (cached && cached.status !== "working" && typeof cached.subject === "string") return toSummary(cached);
-        try {
-          return toPackSummary(await request<unknown>(packPath(entry.id)), entry);
-        } catch (e) {
-          const err = e instanceof ApiError ? e : null;
-          // A job the API no longer knows about is shown as failed rather than hiding it.
-          return { ...entry, subject: entry.subject ?? "", status: err?.kind === "notfound" ? "failed" : "working" };
-        }
-      }),
-    );
-    return { packs, fromCache: false };
+    try {
+      const json = await raw(
+        (m) => m.list(),
+        // Not retried: an API without this endpoint answers 405, and the fallback below is quick.
+        () => request<unknown>(CREATE_PATH, { retry: false }),
+      );
+      const packs = toPackList(json).map((p) => {
+        // The full copy on this device knows about questions the teacher has checked, which can turn
+        // "Check before use" into "Ready to use"; the list only carries the pipeline's verdict.
+        const cached = offlineCache.get(p.id);
+        const settled = (s: string) => s === "ready" || s === "check";
+        return cached && settled(p.status) && settled(cached.status) ? { ...p, status: cached.status } : p;
+      });
+      // Remember them here too, so a pack opened offline later still has its topic and level.
+      for (const p of packs) {
+        if (!packIndex.get(p.id)) packIndex.add({ id: p.id, topic: p.topic, grade: p.grade, subject: p.subject, createdAt: p.createdAt });
+      }
+      return { packs, fromCache: false };
+    } catch (e) {
+      const err = e instanceof ApiError ? e : null;
+      if (err?.kind === "offline") return { packs: offlineList(), fromCache: true };
+      if (useMock || err?.kind === "signin") throw e;
+      return { packs: await listFromDevice(), fromCache: false };
+    }
   },
 };
 
@@ -211,6 +215,23 @@ function savedPack(packId: string, json: unknown): Pack {
   const pack = toPack(json, { id: packId, ...packIndex.get(packId) });
   offlineCache.save(pack);
   return pack;
+}
+
+/** The old way, for an API without GET /lesson-packs: the packs requested on this device, re-checking unfinished ones. */
+async function listFromDevice(): Promise<PackSummary[]> {
+  return Promise.all(
+    packIndex.all().map(async (entry): Promise<PackSummary> => {
+      const cached = offlineCache.get(entry.id);
+      if (cached && cached.status !== "working" && typeof cached.subject === "string") return toSummary(cached);
+      try {
+        return toPackSummary(await request<unknown>(packPath(entry.id)), entry);
+      } catch (e) {
+        const err = e instanceof ApiError ? e : null;
+        // A job the API no longer knows about is shown as failed rather than hiding it.
+        return { ...entry, subject: entry.subject ?? "", status: err?.kind === "notfound" ? "failed" : "working" };
+      }
+    }),
+  );
 }
 
 function toSummary({ id, topic, grade, subject, status, createdAt, failureKind }: Pack): PackSummary {

@@ -5,19 +5,17 @@ import { useMemo, useState } from "react";
 import { AccountButton, BottomNav, LangToggle } from "../components/ui";
 import { AddMaterialForm } from "./AddMaterialForm";
 import { MaterialRow } from "./MaterialRow";
-import type { TokenGetter } from "./api";
 import { type MaterialDetails, type Subject } from "./types";
 import { useMaterials } from "./useMaterials";
 import "./materials.css";
 
 interface Props {
-  getToken: TokenGetter;
   /** Open straight into the add form, e.g. from "Use my materials" (P2·1) or "Add my material" (P2·3). */
   startAdding?: Partial<MaterialDetails>;
 }
 
-export function MaterialsScreen({ getToken, startAdding }: Props) {
-  const { materials, local, loading, loadError, refresh, add, retry, remove } = useMaterials(getToken);
+export function MaterialsScreen({ startAdding }: Props) {
+  const { materials, local, loading, loadError, refresh, add, retry, remove } = useMaterials();
   const [adding, setAdding] = useState<Partial<MaterialDetails> | null>(startAdding ?? null);
   const [filter, setFilter] = useState<Subject | "All">("All");
 

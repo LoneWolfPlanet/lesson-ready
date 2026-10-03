@@ -1,7 +1,6 @@
 /* My materials (phase 2). Mapped onto the app's design tokens (styles/app.css),
    so light and dark themes apply here too. */
 :root {
-  --a-bg: var(--bg);
   --a-surface: var(--surface);
   --a-fg: var(--fg);
   --a-muted: var(--muted);
@@ -9,14 +8,11 @@
   --a-primary: var(--primary);
   --a-primary-fg: var(--primary-fg);
   --a-soft: var(--soft);
-  --a-mark-soft: var(--mark-soft);
-  --a-warn: var(--warn);
   --a-err: var(--fail-fg);
   --a-err-soft: var(--fail-bg);
   --a-run: var(--run-fg);
   --a-run-soft: var(--run-bg);
   --a-display: var(--display);
-  --a-body: var(--body);
 }
 
 .mat-screen {

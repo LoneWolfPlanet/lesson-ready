@@ -1,4 +1,5 @@
-import type { Grade, UiLanguage } from "./api/types";
+import { MAX_GRADE, MIN_GRADE, type Grade, type UiLanguage } from "./api/types";
+import { readJson, readText as get, writeJson, writeText as set } from "./storage";
 
 /** Small per-device preferences, kept in localStorage. */
 const K = {
@@ -15,21 +16,6 @@ export type TextSize = "small" | "normal" | "large";
 /** "system" follows the device's light/dark setting. */
 export type Theme = "system" | "light" | "dark";
 
-function get(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-function set(key: string, value: string) {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    /* blocked storage: preference lasts for this visit only */
-  }
-}
-
 export const prefs = {
   language(): UiLanguage {
     const v = get(K.lang);
@@ -44,7 +30,7 @@ export const prefs = {
     const v = get(K.grade);
     if (v === null || v.trim() === "") return null; // Number("") is 0, which is Kindergarten
     const n = Number(v);
-    return Number.isInteger(n) && n >= 0 && n <= 16 ? (n as Grade) : null;
+    return Number.isInteger(n) && n >= MIN_GRADE && n <= MAX_GRADE ? (n as Grade) : null;
   },
   setLastGrade(g: Grade) {
     set(K.grade, String(g));
@@ -58,17 +44,13 @@ export const prefs = {
   },
 
   recentTopics(): string[] {
-    try {
-      return (JSON.parse(get(K.recent) || "[]") as string[]).slice(0, 4);
-    } catch {
-      return [];
-    }
+    return readJson<string[]>(K.recent, []).slice(0, 4);
   },
   addRecentTopic(topic: string) {
     const clean = topic.trim();
     if (!clean) return;
     const list = [clean, ...prefs.recentTopics().filter((t) => t.toLowerCase() !== clean.toLowerCase())];
-    set(K.recent, JSON.stringify(list.slice(0, 4)));
+    writeJson(K.recent, list.slice(0, 4));
   },
 
   theme(): Theme {
@@ -88,21 +70,11 @@ export const prefs = {
   },
 
   notesChecked(packId: string): number[] {
-    try {
-      const all = JSON.parse(get(K.notes) || "{}") as Record<string, number[]>;
-      return all[packId] ?? [];
-    } catch {
-      return [];
-    }
+    return readJson<Record<string, number[]>>(K.notes, {})[packId] ?? [];
   },
   setNotesChecked(packId: string, checked: number[]) {
-    let all: Record<string, number[]> = {};
-    try {
-      all = JSON.parse(get(K.notes) || "{}");
-    } catch {
-      /* start fresh */
-    }
-    all[packId] = checked;
-    set(K.notes, JSON.stringify(all));
+    const { [packId]: _old, ...rest } = readJson<Record<string, number[]>>(K.notes, {});
+    // An empty list is removed rather than stored, so removed packs leave nothing behind.
+    writeJson(K.notes, checked.length ? { ...rest, [packId]: checked } : rest);
   },
 };

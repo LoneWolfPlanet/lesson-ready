@@ -28,11 +28,13 @@ npm run build                # production build in dist/
 | 1 | Welcome and sign in | `/welcome` | `src/screens/WelcomeScreen.tsx` |
 | 2 | Ask for a lesson | `/new` | `src/screens/NewPackScreen.tsx` |
 | 3 | Writing your lesson | `/packs/:id/working` | `src/screens/WorkingScreen.tsx` |
-| 4 | Lesson pack (lesson / quiz / notes) | `/packs/:id` | `src/screens/PackScreen.tsx` |
+| 4 | Lesson pack (lesson / quiz / notes) | `/packs/:id` | `src/screens/pack/PackScreen.tsx` (tabs: `LessonTab`, `QuizTab`, `NotesTab`) |
 | 5 | Quiz mode | `/packs/:id/quiz` | `src/screens/QuizModeScreen.tsx` |
-| 6 | Teacher notes checklist | `/packs/:id?tab=notes` | `src/screens/PackScreen.tsx` |
-| 7 | Check before use (review banner) | `/packs/:id` | `src/screens/PackScreen.tsx` |
-| 8 | My packs | `/packs` | `src/screens/MyPacksScreen.tsx` |
+| 6 | Teacher notes checklist | `/packs/:id?tab=notes` | `src/screens/pack/NotesTab.tsx` |
+| 7 | Check before use (review banner) and Mark as reviewed | `/packs/:id` | `src/screens/pack/PackScreen.tsx`, `ReviewControl.tsx` |
+| 8 | My packs (filters, remove) | `/packs` | `src/screens/MyPacksScreen.tsx` |
+| P2 | My materials | `/materials` | `src/materials/MaterialsScreen.tsx` |
+| – | Settings | `/settings` | `src/screens/SettingsScreen.tsx` |
 
 ## Project layout
 
@@ -40,11 +42,22 @@ npm run build                # production build in dist/
 src/
   config.ts            all env settings
   auth/                External ID (MSAL v5 redirect + bridge) and mock sign-in
+  storage.ts           localStorage helpers that never throw
   api/                 types, adapter (schema mapping), http client, mock server, offline cache
   i18n/                English / Filipino strings, language + text-size context
-  screens/             the eight screens
+  screens/             Welcome, New, My packs, Working, Quiz mode, Settings
+  screens/pack/        the pack screen: tabs, editors (quiz/lesson/notes), review control, print view
+  materials/           My materials: upload to Blob, list, remove
   components/          icons, status pill, nav, friendly errors
   styles/app.css       design tokens and all styles (incl. print)
 redirect.html          MSAL redirect bridge page
 public/                icons, staticwebapp.config.json
 ```
+
+## Bundle
+
+Welcome, New and My packs load with the app; the pack screen, Working, Quiz mode, Settings
+and My materials load on first visit (`React.lazy` in `src/App.tsx`). React and React Router are
+split into their own files so they stay cached across deploys. The mock API (`api/mockServer.ts`)
+is only downloaded in mock mode and is left out of the offline precache. The service worker
+precaches every other chunk, so all screens still open offline.

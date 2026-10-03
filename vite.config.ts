@@ -31,6 +31,8 @@ export default defineConfig({
         // The redirect bridge must never be served from the app-shell fallback.
         navigateFallbackDenylist: [/^\/redirect\.html/],
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
+        // The fake API (mock mode only) is never needed offline in a real build.
+        globIgnores: ["**/mockServer-*.js"],
       },
     }),
   ],
@@ -39,6 +41,18 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, "index.html"),
         redirect: resolve(__dirname, "redirect.html"),
+      },
+      output: {
+        // Libraries in their own files: they change rarely, so browsers keep them cached
+        // across app deploys and only the small app chunk is downloaded again.
+        // MSAL is left to Rollup on purpose: forcing it into one chunk would make the tiny
+        // sign-in redirect page (redirect.html) download all of MSAL.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          if (/[\\/](react-router|react-router-dom)[\\/]/.test(id)) return "router";
+          if (/[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return "react";
+          return undefined;
+        },
       },
     },
   },

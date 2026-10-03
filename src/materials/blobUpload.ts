@@ -13,7 +13,7 @@ export interface BlobUploadOptions {
   signal?: AbortSignal;
 }
 
-export class BlobUploadError extends Error {}
+class BlobUploadError extends Error {}
 
 export async function uploadToBlob(sasUrl: string, file: File, opts: BlobUploadOptions): Promise<void> {
   const blockCount = Math.max(1, Math.ceil(file.size / BLOCK_SIZE));

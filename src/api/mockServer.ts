@@ -3,6 +3,7 @@
  * It returns JSON in the SAME shape as the live API (a real response is kept in
  * ./fixtures/photosynthesis.json), so the adapter is exercised exactly as in production.
  */
+import { readJson, writeJson } from "../storage";
 import photosynthesis from "./fixtures/photosynthesis.json";
 
 interface MockRequest {
@@ -17,12 +18,8 @@ const KEY = "lr.mock.requests.v2";
 const RUN_SECONDS = 18; // fast, so the waiting screen can be tried quickly
 
 function load(): MockRequest[] {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw) as MockRequest[];
-  } catch {
-    /* fall through */
-  }
+  const saved = readJson<MockRequest[] | null>(KEY, null);
+  if (saved) return saved;
   const day = 24 * 3600 * 1000;
   const seed: MockRequest[] = [
     { id: "demo-photosynthesis", topic: "Photosynthesis", grade: 4, subject: "Science", createdAt: new Date(Date.now() - day).toISOString() },
@@ -33,11 +30,7 @@ function load(): MockRequest[] {
 }
 
 function save(list: MockRequest[]) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(list));
-  } catch {
-    /* ignore */
-  }
+  writeJson(KEY, list);
 }
 
 /** Teacher edits to quiz questions, by pack id then question id. */
@@ -46,11 +39,7 @@ type QuestionEdit = { question: string; options: string[]; correctIndex: number;
 type StoredEdit = QuestionEdit & { teacherChecked: true; teacherEdited: boolean };
 
 function loadEdits(): Record<string, Record<string, StoredEdit>> {
-  try {
-    return JSON.parse(localStorage.getItem(EDITS_KEY) || "{}");
-  } catch {
-    return {};
-  }
+  return readJson(EDITS_KEY, {});
 }
 
 /** Questions the teacher added, and ids they removed, by pack id. */
@@ -58,21 +47,13 @@ const QUIZ_CHANGES_KEY = "lr.mock.quizChanges.v1";
 type QuizChanges = { added: Record<string, unknown>[]; removed: string[] };
 
 function loadQuizChanges(): Record<string, QuizChanges> {
-  try {
-    return JSON.parse(localStorage.getItem(QUIZ_CHANGES_KEY) || "{}");
-  } catch {
-    return {};
-  }
+  return readJson(QUIZ_CHANGES_KEY, {});
 }
 
 function saveQuizChanges(packId: string, changes: QuizChanges) {
   const all = loadQuizChanges();
   all[packId] = changes;
-  try {
-    localStorage.setItem(QUIZ_CHANGES_KEY, JSON.stringify(all));
-  } catch {
-    /* ignore */
-  }
+  writeJson(QUIZ_CHANGES_KEY, all);
 }
 
 /** Teacher edits to the lesson and the notes, by pack id. */
@@ -80,31 +61,19 @@ const PART_EDITS_KEY = "lr.mock.partEdits.v1";
 type PartEdits = { lesson?: Record<string, unknown>; teacher?: Record<string, unknown> };
 
 function loadPartEdits(): Record<string, PartEdits> {
-  try {
-    return JSON.parse(localStorage.getItem(PART_EDITS_KEY) || "{}");
-  } catch {
-    return {};
-  }
+  return readJson(PART_EDITS_KEY, {});
 }
 
 function savePartEdit(packId: string, part: keyof PartEdits, fields: Record<string, unknown>) {
   const all = loadPartEdits();
   all[packId] = { ...all[packId], [part]: { ...all[packId]?.[part], ...fields } };
-  try {
-    localStorage.setItem(PART_EDITS_KEY, JSON.stringify(all));
-  } catch {
-    /* ignore */
-  }
+  writeJson(PART_EDITS_KEY, all);
 }
 
 /** Packs the teacher marked as reviewed. */
 const REVIEWED_KEY = "lr.mock.reviewed.v1";
 function loadReviewed(): Record<string, string> {
-  try {
-    return JSON.parse(localStorage.getItem(REVIEWED_KEY) || "{}");
-  } catch {
-    return {};
-  }
+  return readJson(REVIEWED_KEY, {});
 }
 
 const invalid = () => Object.assign(new Error("invalid"), { status: 422 });
@@ -252,9 +221,11 @@ export const mockServer = {
     return {
       items: load()
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        // Same shape as GET /lesson-packs: summaries with the review's packStatus and verdict.
         .map((r) => {
-          const { result: _r, ...summary } = toJson(r) as Record<string, unknown>;
-          return summary;
+          const { result, ...summary } = withEdits(toJson(r)) as Record<string, unknown>;
+          const res = (result ?? {}) as { teacher?: { packStatus?: string }; review?: { verdict?: string } };
+          return { ...summary, packStatus: res.teacher?.packStatus, verdict: res.review?.verdict };
         }),
     };
   },
@@ -328,11 +299,7 @@ export const mockServer = {
     const all = loadReviewed();
     if (reviewed) all[packId] ??= new Date().toISOString();
     else delete all[packId];
-    try {
-      localStorage.setItem(REVIEWED_KEY, JSON.stringify(all));
-    } catch {
-      /* ignore */
-    }
+    writeJson(REVIEWED_KEY, all);
     return withEdits(toJson(r));
   },
   async updateNotes(packId: string, body: { teachingTips: string[] }) {
@@ -368,11 +335,7 @@ export const mockServer = {
     const all = loadEdits();
     const prev = all[packId]?.[questionId];
     all[packId] = { ...all[packId], [questionId]: { ...body, teacherChecked: true, teacherEdited: changed || !!prev?.teacherEdited } };
-    try {
-      localStorage.setItem(EDITS_KEY, JSON.stringify(all));
-    } catch {
-      /* ignore */
-    }
+    writeJson(EDITS_KEY, all);
     return withEdits(toJson(r));
   },
   async create(body: { topic: string; grade: number; subject?: string; language?: string; force?: boolean }) {

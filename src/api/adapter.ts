@@ -18,6 +18,7 @@
  * snake_case, missing fields) so a small backend change doesn't blank a screen.
  */
 import { config } from "../config";
+import { MAX_GRADE, MIN_GRADE } from "./types";
 import type {
   Activity,
   Grade,
@@ -89,7 +90,7 @@ const key = (v: unknown) => str(v).toLowerCase().replace(/[\s-]+/g, "_");
 
 function toGrade(v: unknown): Grade {
   const n = num(v, typeof v === "string" ? v.replace(/\D/g, "") : undefined) ?? 1;
-  return Math.min(16, Math.max(0, Math.round(n))) as Grade;
+  return Math.min(MAX_GRADE, Math.max(MIN_GRADE, Math.round(n))) as Grade;
 }
 
 const warnedStatuses = new Set<string>();
@@ -252,6 +253,16 @@ export interface PackFallback {
   subject?: string;
 }
 
+/**
+ * Status for a summary. The list endpoint adds the collator's packStatus and the review verdict
+ * (full packs keep them under `result`, which toPack reads instead), so a "ready" job whose review
+ * still wants a look shows as "Check before use", the same as when the pack is opened.
+ */
+function listStatus(raw: Raw): PackStatus {
+  const status = toStatus(raw);
+  return status === "ready" && (CHECK_VALUES.has(key(raw.packStatus)) || CHECK_VALUES.has(key(raw.verdict))) ? "check" : status;
+}
+
 export function toPackSummary(json: unknown, fallback: PackFallback = {}): PackSummary {
   const raw = obj(json);
   const grade = raw.grade ?? raw.gradeLevel;
@@ -260,7 +271,7 @@ export function toPackSummary(json: unknown, fallback: PackFallback = {}): PackS
     topic: str(raw.topic, raw.title, fallback.topic) || "Untitled lesson",
     grade: grade !== undefined ? toGrade(grade) : (fallback.grade ?? 1),
     subject: str(raw.subject, fallback.subject),
-    status: toStatus(raw),
+    status: listStatus(raw),
     createdAt: str(raw.createdAt, raw.created_at, fallback.createdAt) || new Date().toISOString(),
     ...(key(raw.status) === "unavailable" ? { failureKind: "unavailable" as const } : {}),
   };

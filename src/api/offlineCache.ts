@@ -1,33 +1,39 @@
+import { readJson, removeKey, writeJson } from "../storage";
 import type { Grade, Pack, PackSummary } from "./types";
 
 /**
  * Keeps every finished pack the teacher has opened, so it opens again with no signal.
  * localStorage is enough for text-only packs (roughly 5-10 KB each).
+ *
+ * Both stores are parsed once and kept in memory: My packs asks about every row on every
+ * render, and re-parsing up to 60 packs each time is what made long lists slow.
  */
 const KEY = "lr.packs.offline.v1";
+const INDEX_KEY = "lr.packs.index.v1";
 const MAX_PACKS = 60;
+const MAX_INDEX = 200;
 
-function readAll(): Record<string, Pack> {
-  try {
-    return JSON.parse(localStorage.getItem(KEY) || "{}") as Record<string, Pack>;
-  } catch {
-    return {};
-  }
+let packs: Record<string, Pack> | null = null;
+let index: IndexEntry[] | null = null;
+
+// Another tab changed storage (or cleared it): read it again next time.
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key === null || e.key === KEY) packs = null;
+    if (e.key === null || e.key === INDEX_KEY) index = null;
+  });
 }
 
+const readAll = () => (packs ??= readJson<Record<string, Pack>>(KEY, {}));
 function writeAll(all: Record<string, Pack>) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(all));
-  } catch {
-    /* storage full or blocked: offline copies are a convenience, not required */
-  }
+  packs = all;
+  writeJson(KEY, all);
 }
 
 export const offlineCache = {
   save(pack: Pack) {
     if (pack.status === "working") return;
-    const all = readAll();
-    all[pack.id] = pack;
+    const all = { ...readAll(), [pack.id]: pack };
     const ids = Object.keys(all).sort((a, b) => all[b].createdAt.localeCompare(all[a].createdAt));
     for (const id of ids.slice(MAX_PACKS)) delete all[id];
     writeAll(all);
@@ -39,9 +45,8 @@ export const offlineCache = {
     return id in readAll();
   },
   remove(id: string) {
-    const all = readAll();
-    delete all[id];
-    writeAll(all);
+    const { [id]: _gone, ...rest } = readAll();
+    writeAll(rest);
   },
   list(): PackSummary[] {
     return Object.values(readAll()).map(({ id, topic, grade, subject, status, createdAt }) => ({
@@ -54,19 +59,16 @@ export const offlineCache = {
     }));
   },
   clear() {
-    try {
-      localStorage.removeItem(KEY);
-    } catch {
-      /* ignore */
-    }
+    packs = null;
+    removeKey(KEY);
   },
 };
 
 /**
- * The teacher's own pack requests on this device.
+ * The teacher's own pack requests on this device, newest first.
  * The Lesson Pack API has no "list my packs" endpoint yet, so My packs is built from
- * this index. Packs requested on another device won't appear until the API adds
- * GET /lesson-packs (see INTEGRATION.md).
+ * this index. Packs requested on another device appear once they are opened here
+ * (or found by the duplicate check).
  */
 export interface IndexEntry {
   id: string;
@@ -76,41 +78,32 @@ export interface IndexEntry {
   createdAt: string;
 }
 
-const INDEX_KEY = "lr.packs.index.v1";
+function readIndex(): IndexEntry[] {
+  return (index ??= readJson<IndexEntry[]>(INDEX_KEY, []).sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+}
+function writeIndex(list: IndexEntry[]) {
+  index = list;
+  writeJson(INDEX_KEY, list);
+}
 
 export const packIndex = {
   all(): IndexEntry[] {
-    try {
-      return (JSON.parse(localStorage.getItem(INDEX_KEY) || "[]") as IndexEntry[]).sort((a, b) =>
-        b.createdAt.localeCompare(a.createdAt),
-      );
-    } catch {
-      return [];
-    }
+    return [...readIndex()];
   },
   get(id: string): IndexEntry | undefined {
-    return packIndex.all().find((e) => e.id === id);
+    return readIndex().find((e) => e.id === id);
   },
   remove(id: string) {
-    try {
-      localStorage.setItem(INDEX_KEY, JSON.stringify(packIndex.all().filter((e) => e.id !== id)));
-    } catch {
-      /* ignore */
-    }
+    writeIndex(readIndex().filter((e) => e.id !== id));
   },
   add(entry: IndexEntry) {
-    const list = [entry, ...packIndex.all().filter((e) => e.id !== entry.id)].slice(0, 200);
-    try {
-      localStorage.setItem(INDEX_KEY, JSON.stringify(list));
-    } catch {
-      /* ignore */
-    }
+    const list = [entry, ...readIndex().filter((e) => e.id !== entry.id)]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, MAX_INDEX);
+    writeIndex(list);
   },
   clear() {
-    try {
-      localStorage.removeItem(INDEX_KEY);
-    } catch {
-      /* ignore */
-    }
+    index = null;
+    removeKey(INDEX_KEY);
   },
 };

@@ -18,6 +18,17 @@ export class ApiError extends Error {
   }
 }
 
+/** Plain-English fallback for ApiError.message when the API sent no readable `detail`. */
+const FALLBACK_MESSAGE: Record<ApiErrorKind, string> = {
+  offline: "No connection. Please try again when you're back online.",
+  signin: "Please sign in again.",
+  notfound: "We couldn't find that.",
+  invalid: "Please check what you entered and try again.",
+  conflict: "This changed while saving. Please try again.",
+  server: "Something went wrong. Please try again.",
+  busy: "Lots of teachers are busy right now. Please try again in a minute.",
+};
+
 const RETRIES = 3;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -40,13 +51,13 @@ export async function request<T>(path: string, init: RequestInit & { retry?: boo
   const url = `${config.api.baseUrl}${path}`;
   const { retry = true, ...fetchInit } = init;
   const attempts = retry ? RETRIES : 0;
-  let lastError: ApiError = new ApiError("server", "Request failed");
+  let lastError: ApiError = new ApiError("server", FALLBACK_MESSAGE.server);
 
   for (let attempt = 0; attempt <= attempts; attempt++) {
     if (attempt > 0) await sleep(Math.min(8000, 600 * 2 ** (attempt - 1)));
 
     if (!navigator.onLine) {
-      lastError = new ApiError("offline", "No connection");
+      lastError = new ApiError("offline", FALLBACK_MESSAGE.offline);
       continue;
     }
 
@@ -60,7 +71,7 @@ export async function request<T>(path: string, init: RequestInit & { retry?: boo
     try {
       res = await fetch(url, { ...fetchInit, headers });
     } catch {
-      lastError = new ApiError("offline", "Network error");
+      lastError = new ApiError("offline", FALLBACK_MESSAGE.offline);
       continue;
     }
 
@@ -73,7 +84,8 @@ export async function request<T>(path: string, init: RequestInit & { retry?: boo
     const detail = await readDetail(res);
     lastError = new ApiError(
       kind,
-      `HTTP ${res.status}`,
+      // FastAPI's string `detail` is written for teachers (e.g. "This file is too big"), so it is the message.
+      typeof detail === "string" ? detail : FALLBACK_MESSAGE[kind],
       res.status,
       typeof detail === "string" ? detail : undefined,
       detail && typeof detail === "object" ? (detail as Record<string, unknown>) : undefined,

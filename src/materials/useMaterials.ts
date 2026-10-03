@@ -1,17 +1,11 @@
 // Loads the teacher's materials, runs uploads, and polls while anything is still uploading or being read.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { materialsApi, type TokenGetter } from "./api";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { materialsApi as api } from "./api";
 import { uploadToBlob } from "./blobUpload";
 import type { LocalUpload, Material, MaterialDetails } from "./types";
 
-
-export function useMaterials(getToken: TokenGetter) {
-  // Keep the latest token function without rebuilding the client (and re-fetching) on every render.
-  const tokenRef = useRef(getToken);
-  tokenRef.current = getToken;
-  const api = useMemo(() => materialsApi(() => tokenRef.current()), []);
-
+export function useMaterials() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [local, setLocal] = useState<Record<string, LocalUpload>>({});
   const [loading, setLoading] = useState(true);
@@ -27,7 +21,7 @@ export function useMaterials(getToken: TokenGetter) {
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, []);
 
   useEffect(() => {
     void refresh();
@@ -86,7 +80,7 @@ export function useMaterials(getToken: TokenGetter) {
         controllers.current.delete(id);
       }
     },
-    [api],
+    [],
   );
 
   /** Creates the record, then uploads. Throws (for the form to show) only if the API refuses. */
@@ -101,7 +95,7 @@ export function useMaterials(getToken: TokenGetter) {
       setMaterials((list) => [material, ...list]);
       void send(material.id, uploadUrl, file, details);
     },
-    [api, send],
+    [send],
   );
 
   /** Retry asks for a fresh SAS, because the old one may have expired. */
@@ -118,7 +112,7 @@ export function useMaterials(getToken: TokenGetter) {
       setLocal(({ [id]: _old, ...rest }) => rest);
       await add(item.file, item.details);
     },
-    [api, add, local],
+    [add, local],
   );
 
   const remove = useCallback(
@@ -128,7 +122,7 @@ export function useMaterials(getToken: TokenGetter) {
       setMaterials((list) => list.filter((m) => m.id !== id));
       setLocal(({ [id]: _gone, ...rest }) => rest);
     },
-    [api],
+    [],
   );
 
   return { materials, local, loading, loadError, refresh, add, retry, remove };

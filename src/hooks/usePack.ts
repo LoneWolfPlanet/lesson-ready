@@ -24,7 +24,7 @@ export function useOnline(): boolean {
  * Safety net: stop polling a pack that is still "working" long after it should have
  * finished, so an unexpected status can never cause endless requests.
  */
-export const MAX_WAIT_MINUTES = Math.max(20, config.expectedMinutes * 10);
+const MAX_WAIT_MINUTES = Math.max(20, config.expectedMinutes * 10);
 
 export function isStale(createdAt: string): boolean {
   return (Date.now() - Date.parse(createdAt)) / 60000 > MAX_WAIT_MINUTES;
