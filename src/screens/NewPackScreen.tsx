@@ -4,7 +4,7 @@ import { duplicateOf, packsApi } from "../api/client";
 import { asApiError, type ApiError } from "../api/http";
 import { GRADES, OTHER_GRADES, OTHER_LEVELS, type Grade, type PackSummary } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
-import { AccountButton, BottomNav, ErrorMessage, LangToggle, StatusPill } from "../components/ui";
+import { AccountButton, BottomNav, ErrorMessage, StatusPill } from "../components/ui";
 import { Icon } from "../components/Icon";
 import { SUGGESTIONS } from "../data/suggestions";
 import { SUBJECT_CHIPS, isSuggestedSubject } from "../data/subjects";
@@ -85,10 +85,7 @@ export function NewPackScreen() {
       <main className="screen">
         <div className="row">
           <p className="sub">{greeting}</p>
-          <div className="row gap-sm">
-            <LangToggle />
-            <AccountButton />
-          </div>
+          <AccountButton />
         </div>
 
         <form className="stack gap-lg grow" onSubmit={submit} noValidate>

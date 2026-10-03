@@ -1,6 +1,7 @@
 // One file in "My materials", with the plain-word status pills from the design.
 
 import { useState } from "react";
+import type { Strings } from "../i18n/strings";
 import { useUi } from "../i18n/UiContext";
 import { formatBytes } from "./format";
 import { ACCEPTED_TYPES, type LocalUpload, type Material } from "./types";
@@ -17,21 +18,19 @@ interface Props {
 
 type View = { pill: "ok" | "run" | "err"; label: string; detail?: string };
 
-function viewFor(m: Material, local?: LocalUpload): View {
-  if (local?.state === "error") return { pill: "err", label: "Didn't upload", detail: local.error };
-  if (local?.state === "sending") return { pill: "run", label: "Uploading" };
+function viewFor(m: Material, t: Strings, local?: LocalUpload): View {
+  if (local?.state === "error") return { pill: "err", label: t.matDidntUpload, detail: local.error };
+  if (local?.state === "sending") return { pill: "run", label: t.matUploading };
   switch (m.status) {
     case "ready":
-      return { pill: "ok", label: "Ready" };
+      return { pill: "ok", label: t.matReady };
     case "indexing":
-      return { pill: "run", label: "Reading" };
+      return { pill: "run", label: t.matReading };
     case "failed":
-      return { pill: "err", label: "Couldn't read", detail: m.error ?? "We couldn't read this file." };
+      return { pill: "err", label: t.matCouldntRead, detail: m.error ?? t.matReadFailed };
     case "uploading": {
       const stale = Date.now() - new Date(m.createdAt).getTime() > STALE_UPLOAD_MS;
-      return stale
-        ? { pill: "err", label: "Didn't upload", detail: "The upload stopped. Remove it and add the file again." }
-        : { pill: "run", label: "Uploading" };
+      return stale ? { pill: "err", label: t.matDidntUpload, detail: t.matUploadStopped } : { pill: "run", label: t.matUploading };
     }
   }
 }
@@ -40,7 +39,7 @@ export function MaterialRow({ material: m, local, onRetry, onRemove }: Props) {
   const { t } = useUi();
   const [confirming, setConfirming] = useState(false);
   const [removing, setRemoving] = useState(false);
-  const view = viewFor(m, local);
+  const view = viewFor(m, t, local);
   const typeLabel = ACCEPTED_TYPES[m.contentType]?.label ?? "FILE";
 
   async function remove() {
@@ -65,7 +64,7 @@ export function MaterialRow({ material: m, local, onRetry, onRemove }: Props) {
           <div
             className="mat-upbar"
             role="progressbar"
-            aria-label={`Uploading ${m.lessonTitle}`}
+            aria-label={t.matUploadingName(m.lessonTitle)}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.round(local.progress * 100)}
@@ -77,29 +76,29 @@ export function MaterialRow({ material: m, local, onRetry, onRemove }: Props) {
           <div className="mat-row-actions">
             {local?.state === "error" && (
               <button type="button" className="mat-link" onClick={onRetry}>
-                Try again
+                {t.retry}
               </button>
             )}
             <button type="button" className="mat-link" onClick={() => setConfirming(true)}>
-              Remove
+              {t.matRemove}
             </button>
           </div>
         )}
         {view.pill !== "err" && !confirming && (
           <div className="mat-row-actions">
             <button type="button" className="mat-link mat-link-quiet" onClick={() => setConfirming(true)}>
-              Remove
+              {t.matRemove}
             </button>
           </div>
         )}
         {confirming && (
           <div className="mat-row-actions">
-            <span className="mat-meta">Remove this file?</span>
+            <span className="mat-meta">{t.matRemoveConfirm}</span>
             <button type="button" className="mat-link mat-link-danger" onClick={remove} disabled={removing}>
-              {removing ? "Removing…" : "Yes, remove"}
+              {removing ? t.deleting : t.matYesRemove}
             </button>
             <button type="button" className="mat-link" onClick={() => setConfirming(false)} disabled={removing}>
-              Keep
+              {t.matKeep}
             </button>
           </div>
         )}

@@ -63,7 +63,7 @@ export function Logo({ size = 54 }: { size?: number }) {
     <span className="logo" style={{ width: size, height: size }}>
       <svg viewBox="0 0 64 64" width={size * 0.6} height={size * 0.6} aria-hidden="true">
         <path d="M12 16h16a6 6 0 0 1 6 6v28a5 5 0 0 0-5-5H12z" fill="#f7f6f2" />
-        <path d="M52 16H40a6 6 0 0 0-6 6v28a5 5 0 0 1 5-5h13z" fill="#dcefe7" />
+        <path d="M52 16H40a6 6 0 0 0-6 6v28a5 5 0 0 1 5-5h13z" fill="#d9eeeb" />
       </svg>
     </span>
   );

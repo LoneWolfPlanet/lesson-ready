@@ -2,7 +2,8 @@
 // BottomNav outside it so it stays at the bottom of the screen.
 
 import { useMemo, useState } from "react";
-import { AccountButton, BottomNav, LangToggle } from "../components/ui";
+import { AccountButton, BottomNav } from "../components/ui";
+import { useUi } from "../i18n/UiContext";
 import { AddMaterialForm } from "./AddMaterialForm";
 import { MaterialRow } from "./MaterialRow";
 import { type MaterialDetails, type Subject } from "./types";
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function MaterialsScreen({ startAdding }: Props) {
+  const { t } = useUi();
   const { materials, local, loading, loadError, refresh, add, retry, remove } = useMaterials();
   const [adding, setAdding] = useState<Partial<MaterialDetails> | null>(startAdding ?? null);
   const [filter, setFilter] = useState<Subject | "All">("All");
@@ -49,16 +51,13 @@ export function MaterialsScreen({ startAdding }: Props) {
     <>
       <main className="screen mat-screen">
         <div className="row">
-          <h1 className="title">My materials</h1>
-          <div className="row gap-sm">
-            <LangToggle />
-            <AccountButton />
-          </div>
+          <h1 className="title">{t.matTitle}</h1>
+          <AccountButton />
         </div>
-        <p className="mat-sub">Lessons on these topics will use your files first.</p>
+        <p className="mat-sub">{t.matSub}</p>
 
         {subjectsInUse.length > 1 && (
-          <div className="mat-chips" role="tablist" aria-label="Filter by subject">
+          <div className="mat-chips" role="tablist" aria-label={t.matFilterLabel}>
             {(["All", ...subjectsInUse] as const).map((s) => (
               <button
                 key={s}
@@ -68,29 +67,27 @@ export function MaterialsScreen({ startAdding }: Props) {
                 className={filter === s ? "on" : ""}
                 onClick={() => setFilter(s)}
               >
-                {s}
+                {s === "All" ? t.matAll : s}
               </button>
             ))}
           </div>
         )}
 
-        {loading && <p className="mat-meta">Loading your materials…</p>}
+        {loading && <p className="mat-meta">{t.matLoading}</p>}
 
         {loadError && (
           <div className="mat-error-box">
-            <p className="mat-error">{loadError}</p>
+            <p className="mat-error">{loadError === "signin" ? t.errSignin : t.matLoadError}</p>
             <button type="button" className="mat-link" onClick={() => void refresh()}>
-              Try again
+              {t.retry}
             </button>
           </div>
         )}
 
         {!loading && !loadError && materials.length === 0 && (
           <div className="mat-empty">
-            <b>No materials yet</b>
-            <span className="mat-sub">
-              Add a module, handout or a photo of a printed page. We'll write lessons from it.
-            </span>
+            <b>{t.matEmptyTitle}</b>
+            <span className="mat-sub">{t.matEmptyBody}</span>
           </div>
         )}
 
@@ -108,7 +105,7 @@ export function MaterialsScreen({ startAdding }: Props) {
 
         <div className="mat-spacer" />
         <button type="button" className="mat-btn" onClick={() => setAdding({})}>
-          ＋ Add a file or photo
+          ＋ {t.matAdd}
         </button>
       </main>
       <BottomNav />

@@ -31,6 +31,8 @@ export function PackScreen() {
   const [focusId, setFocusId] = useState<string | null>(null);
   /** The Lesson or Notes tab being edited; tabs and actions wait until it is saved or cancelled. */
   const [editing, setEditing] = useState<"lesson" | "notes" | null>(null);
+  /** A quiz question (or a new one) is open in its editor. */
+  const [quizEditing, setQuizEditing] = useState(false);
   const tab = (TABS.includes(params.get("tab") as Tab) ? params.get("tab") : "lesson") as Tab;
 
   // Scroll to a flagged item after its tab has rendered.
@@ -68,6 +70,7 @@ export function PackScreen() {
     setToast(message);
   };
   const setTab = (next: Tab, focus?: string) => {
+    setQuizEditing(false);
     setParams({ tab: next }, { replace: true });
     if (focus) setFocusId(focus);
   };
@@ -97,7 +100,7 @@ export function PackScreen() {
         <header className="stack gap-sm">
           <h1 className="title">{pack.topic}</h1>
           <p className="sub">
-            {t.gradeN(pack.grade)} · {t.questionsN(pack.quiz.length)}
+            {[t.gradeN(pack.grade), pack.subject.trim(), t.questionsN(pack.quiz.length)].filter(Boolean).join(" · ")}
           </p>
           <div className="row start gap-sm wrap">
             <StatusPill status={pack.status} />
@@ -112,10 +115,12 @@ export function PackScreen() {
 
         {fromCache && <p className="hint">{t.showingSaved}</p>}
 
-        {editing === null && <ReviewControl pack={pack} t={t} lang={lang} canEdit={canEdit} onSaved={saved} />}
-
-        {/* Once the teacher has signed it off, the notes stay on each item but the banner goes. */}
+        {/* What to check comes first, then the sign-off. Once reviewed, the banner goes away. */}
         {shown.issues.length > 0 && <ReviewBanner issues={shown.issues} t={t} onOpen={setTab} />}
+
+        {editing === null && !quizEditing && (
+          <ReviewControl pack={pack} t={t} lang={lang} canEdit={canEdit} onSaved={saved} />
+        )}
 
         <div className="tabs" role="tablist">
           {TABS.map((k) => (
@@ -125,7 +130,7 @@ export function PackScreen() {
               role="tab"
               aria-selected={tab === k}
               className={tab === k ? "on" : ""}
-              disabled={editing !== null && tab !== k}
+              disabled={(editing !== null || quizEditing) && tab !== k}
               onClick={() => setTab(k)}
             >
               {k === "lesson" ? t.tabLesson : k === "quiz" ? `${t.tabQuiz} · ${pack.quiz.length}` : t.tabNotes}
@@ -166,6 +171,7 @@ export function PackScreen() {
               t={t}
               canEdit={canEdit}
               onSaved={saved}
+              onEditingChange={setQuizEditing}
             />
           )}
           {tab === "notes" &&
@@ -200,7 +206,7 @@ export function PackScreen() {
       </main>
 
       {/* Hidden while editing, so the editor's own Save bar is the only one at the bottom. */}
-      {editing === null && (
+      {editing === null && !quizEditing && (
         <div className="actions no-print">
           <button type="button" className="main" onClick={() => navigate(`/packs/${pack.id}/quiz`)} disabled={!pack.quiz.length}>
             <i>

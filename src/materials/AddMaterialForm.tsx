@@ -52,11 +52,11 @@ export function AddMaterialForm({ initial, onSubmit, onCancel }: Props) {
     setFileError(null);
     if (!f) return;
     if (!ACCEPTED_TYPES[f.type]) {
-      setFileError("Use a PDF, a Word file (.docx), or a JPG or PNG photo.");
+      setFileError(t.matBadType);
       return;
     }
     if (f.size > MAX_FILE_BYTES) {
-      setFileError(`This file is ${formatBytes(f.size)}. The limit is ${formatBytes(MAX_FILE_BYTES)}.`);
+      setFileError(t.matTooBig(formatBytes(f.size), formatBytes(MAX_FILE_BYTES)));
       return;
     }
     setFile(f);
@@ -75,7 +75,8 @@ export function AddMaterialForm({ initial, onSubmit, onCancel }: Props) {
     try {
       await onSubmit(file, { lessonTitle: titleTrimmed, subject: subject.trim(), grade });
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Couldn't start the upload. Please try again.");
+      // The API's reason (e.g. a quota message) when it gave one; otherwise a general line.
+      setSubmitError(err instanceof Error && err.message ? err.message : t.matUploadFailed);
       setSubmitting(false);
     }
   }
@@ -86,16 +87,16 @@ export function AddMaterialForm({ initial, onSubmit, onCancel }: Props) {
     <form className="mat-form" onSubmit={handleSubmit} noValidate>
       <div className="mat-form-head">
         <button type="button" className="mat-link" onClick={onCancel}>
-          Cancel
+          {t.cancel}
         </button>
       </div>
 
-      <h1 className="mat-title">Add your material</h1>
-      <p className="mat-sub">We'll use it first when you make a lesson on this topic.</p>
+      <h1 className="mat-title">{t.matAddTitle}</h1>
+      <p className="mat-sub">{t.matAddSub}</p>
 
       {/* File */}
       <div className="mat-field">
-        <span className="mat-label">File or photo</span>
+        <span className="mat-label">{t.matFileLabel}</span>
         {file ? (
           <div className="mat-file">
             <i className="mat-file-icon">{typeLabel}</i>
@@ -104,18 +105,18 @@ export function AddMaterialForm({ initial, onSubmit, onCancel }: Props) {
               <div className="mat-meta">{formatBytes(file.size)}</div>
             </div>
             <button type="button" className="mat-link" onClick={() => setFile(null)}>
-              Change
+              {t.matChange}
             </button>
           </div>
         ) : (
           <div className="mat-pick">
             <button type="button" className="mat-pick-btn" onClick={() => fileInput.current?.click()}>
-              ＋ Choose a file
-              <small>PDF, Word or photo · up to {formatBytes(MAX_FILE_BYTES)}</small>
+              ＋ {t.matChooseFile}
+              <small>{t.matFileHint(formatBytes(MAX_FILE_BYTES))}</small>
             </button>
             <button type="button" className="mat-pick-btn" onClick={() => cameraInput.current?.click()}>
-              Take a photo
-              <small>Of a printed page</small>
+              {t.matTakePhoto}
+              <small>{t.matTakePhotoHint}</small>
             </button>
           </div>
         )}
@@ -143,31 +144,31 @@ export function AddMaterialForm({ initial, onSubmit, onCancel }: Props) {
           }}
         />
         {fileError && <p className="mat-error">{fileError}</p>}
-        {showErrors && missing.file && !fileError && <p className="mat-error">Choose a file or take a photo.</p>}
+        {showErrors && missing.file && !fileError && <p className="mat-error">{t.matNeedFile}</p>}
       </div>
 
       {/* Lesson title */}
       <div className="mat-field">
         <label className="mat-label" htmlFor={`${ids}-title`}>
-          Lesson title
+          {t.matLessonTitle}
         </label>
         <input
           id={`${ids}-title`}
           className="mat-input"
           value={lessonTitle}
           maxLength={MAX_TITLE_LENGTH}
-          placeholder="e.g. Parts of a plant"
+          placeholder={t.matTitlePlaceholder}
           autoComplete="off"
           onChange={(e) => setLessonTitle(e.target.value)}
           aria-invalid={showErrors && missing.title}
         />
-        {showErrors && missing.title && <p className="mat-error">Add a lesson title.</p>}
+        {showErrors && missing.title && <p className="mat-error">{t.matNeedTitle}</p>}
       </div>
 
       {/* Subject */}
       <div className="mat-field" role="radiogroup" aria-labelledby={`${ids}-subject`}>
         <span className="mat-label" id={`${ids}-subject`}>
-          Subject
+          {t.subject}
         </span>
         <div className="mat-subjects">
           {SUBJECT_CHIPS.map((s) => {
@@ -216,14 +217,14 @@ export function AddMaterialForm({ initial, onSubmit, onCancel }: Props) {
           />
         )}
         {showErrors && missing.subject && (
-          <p className="mat-error">{otherSubject ? "Type the subject." : "Pick a subject."}</p>
+          <p className="mat-error">{otherSubject ? t.matTypeSubject : t.matPickSubject}</p>
         )}
       </div>
 
       {/* Grade */}
       <div className="mat-field" role="radiogroup" aria-labelledby={`${ids}-grade`}>
         <span className="mat-label" id={`${ids}-grade`}>
-          Grade
+          {t.grade}
         </span>
         <div className="mat-grades">
           {GRADES.map((g) => (
@@ -265,13 +266,13 @@ export function AddMaterialForm({ initial, onSubmit, onCancel }: Props) {
             })}
           </select>
         </label>
-        {showErrors && missing.grade && <p className="mat-error">Pick a grade or level.</p>}
+        {showErrors && missing.grade && <p className="mat-error">{t.matPickGrade}</p>}
       </div>
 
       <div className="mat-spacer" />
       {submitError && <p className="mat-error mat-error-box">{submitError}</p>}
       <button type="submit" className="mat-btn" disabled={submitting}>
-        {submitting ? "Starting upload…" : "Upload"}
+        {submitting ? t.matStartingUpload : t.matUpload}
       </button>
     </form>
   );

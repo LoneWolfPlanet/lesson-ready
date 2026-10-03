@@ -7,10 +7,15 @@
   --fg: #1b2420;
   --muted: #5d6b65;
   --line: #e4e1d8;
-  --primary: #1f6f5c;
-  --primary-press: #185a4a;
+  --primary: #1b6d66; /* brand teal */
+  --primary-press: #155852;
   --primary-fg: #ffffff;
-  --soft: #dcefe7;
+  --soft: #d9eeeb;
+  /* Pack status greens, separate from the brand teal so "ready" never looks like "just a button". */
+  --ok-bg: #e1f1e2; /* Ready to use */
+  --ok-fg: #2b6a33;
+  --done-bg: #2e7a39; /* Reviewed by the teacher: the strongest state, so solid */
+  --done-fg: #ffffff;
   --mark: #f3b53a;
   --mark-soft: #fdf1d6;
   --warn: #7a4f00;
@@ -51,10 +56,14 @@
     --fg: #e7ede9;
     --muted: #9fb0a8;
     --line: #2e3a35;
-    --primary: #5fc7a7;
-    --primary-press: #4db394;
+    --primary: #5cc4bb;
+    --primary-press: #4ab0a7;
     --primary-fg: #0c1814;
-    --soft: #1c3a31;
+    --soft: #1b3a37;
+    --ok-bg: #1c3322;
+    --ok-fg: #93d69d;
+    --done-bg: #86cf91;
+    --done-fg: #0c1a10;
     --mark: #f0bc4b;
     --mark-soft: #3a2f12;
     --warn: #f2c96b;
@@ -75,10 +84,14 @@
   --fg: #e7ede9;
   --muted: #9fb0a8;
   --line: #2e3a35;
-  --primary: #5fc7a7;
-  --primary-press: #4db394;
+  --primary: #5cc4bb;
+  --primary-press: #4ab0a7;
   --primary-fg: #0c1814;
-  --soft: #1c3a31;
+  --soft: #1b3a37;
+  --ok-bg: #1c3322;
+  --ok-fg: #93d69d;
+  --done-bg: #86cf91;
+  --done-fg: #0c1a10;
   --mark: #f0bc4b;
   --mark-soft: #3a2f12;
   --warn: #f2c96b;
@@ -111,8 +124,11 @@ body {
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
 }
+/* Form controls don't inherit the page font by default (textareas fall back to monospace). */
 button,
-input {
+input,
+textarea,
+select {
   font: inherit;
   color: inherit;
 }
@@ -518,8 +534,8 @@ a {
   white-space: nowrap;
 }
 .pill.ok {
-  background: var(--soft);
-  color: var(--primary);
+  background: var(--ok-bg);
+  color: var(--ok-fg);
 }
 .pill.warn {
   background: var(--mark-soft);
@@ -534,8 +550,8 @@ a {
   color: var(--fail-fg);
 }
 .pill.done {
-  background: var(--primary);
-  color: var(--primary-fg);
+  background: var(--done-bg);
+  color: var(--done-fg);
 }
 .review-control {
   display: grid;
@@ -551,7 +567,7 @@ a {
 .reviewed {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--ok-fg);
 }
 .saved,
 .offline-mark {
@@ -1015,7 +1031,7 @@ button.back-link {
   min-height: 40px;
   font-size: var(--text-sm);
   font-weight: 700;
-  color: var(--primary);
+  color: var(--ok-fg);
 }
 .quiz-item.editing {
   border: 1.5px solid var(--primary);
@@ -1279,6 +1295,39 @@ button.back-link {
   min-height: 100vh;
   min-height: 100dvh;
   gap: 20px;
+}
+/* Quiz mode is projected for the class: on a laptop or projector use the whole screen,
+   not the phone-width column the rest of the app sits in. */
+.app:has(.quiz-mode) {
+  max-width: none;
+  background: var(--dark);
+}
+@media (min-width: 900px) {
+  .quiz-mode {
+    width: min(100%, 1180px);
+    margin: 0 auto;
+    padding-inline: 48px;
+    gap: 28px;
+  }
+  .quiz-mode .q-big {
+    font-size: clamp(2.2rem, 3.6vw, 3.4rem);
+  }
+  .quiz-mode .opts {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .quiz-mode .opts li {
+    font-size: clamp(1.3rem, 2vw, 1.8rem);
+    padding: 18px 20px;
+  }
+  .quiz-mode .q-explain {
+    font-size: 1.25rem;
+  }
+  .quiz-mode .q-nav {
+    max-width: 640px;
+    width: 100%;
+    margin-inline: auto;
+  }
 }
 .q-count {
   font-size: 0.8rem;

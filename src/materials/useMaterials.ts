@@ -1,6 +1,7 @@
 // Loads the teacher's materials, runs uploads, and polls while anything is still uploading or being read.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ApiError } from "../api/http";
 import { materialsApi as api } from "./api";
 import { uploadToBlob } from "./blobUpload";
 import type { LocalUpload, Material, MaterialDetails } from "./types";
@@ -9,7 +10,8 @@ export function useMaterials() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [local, setLocal] = useState<Record<string, LocalUpload>>({});
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  /** Why the list didn't load; the screen turns it into words in the teacher's language. */
+  const [loadError, setLoadError] = useState<"signin" | "failed" | null>(null);
   const controllers = useRef(new Map<string, AbortController>());
 
   const refresh = useCallback(async () => {
@@ -17,7 +19,7 @@ export function useMaterials() {
       setMaterials(await api.list());
       setLoadError(null);
     } catch (e) {
-      setLoadError(e instanceof Error ? e.message : "Couldn't load your materials.");
+      setLoadError(e instanceof ApiError && e.kind === "signin" ? "signin" : "failed");
     } finally {
       setLoading(false);
     }

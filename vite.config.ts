@@ -13,7 +13,7 @@ export default defineConfig({
         name: "LessonReady",
         short_name: "LessonReady",
         description: "Ready-to-teach lesson packs in a few minutes.",
-        theme_color: "#1f6f5c",
+        theme_color: "#1b6d66",
         background_color: "#f7f6f2",
         display: "standalone",
         start_url: "/",

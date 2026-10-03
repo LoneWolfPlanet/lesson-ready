@@ -67,7 +67,7 @@ function syncThemeColor() {
   const isDark =
     document.documentElement.dataset.theme === "dark" ||
     (!document.documentElement.dataset.theme && window.matchMedia?.("(prefers-color-scheme: dark)").matches);
-  meta.setAttribute("content", isDark ? "#121816" : "#1f6f5c");
+  meta.setAttribute("content", isDark ? "#121816" : "#1b6d66");
 }
 
 export function useUi(): UiState {

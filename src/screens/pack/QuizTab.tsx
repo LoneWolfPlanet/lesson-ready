@@ -16,15 +16,22 @@ export function QuizTab({
   t,
   canEdit,
   onSaved,
+  onEditingChange,
 }: {
   pack: Pack;
   t: Strings;
   /** False offline or when showing the saved copy: edits need the API. */
   canEdit: boolean;
   onSaved(pack: Pack, message: string): void;
+  /** Tells the pack screen when an editor is open, so it can hide the bottom bar. */
+  onEditingChange?(editing: boolean): void;
 }) {
   /** A question index being edited, "new" for the add form, or nothing. */
-  const [editing, setEditing] = useState<number | "new" | null>(null);
+  const [editing, setEditingState] = useState<number | "new" | null>(null);
+  const setEditing = (next: number | "new" | null) => {
+    setEditingState(next);
+    onEditingChange?.(next !== null);
+  };
   const [marking, setMarking] = useState<number | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<number | null>(null);
   const [removing, setRemoving] = useState(false);

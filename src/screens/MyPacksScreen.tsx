@@ -5,7 +5,7 @@ import { asApiError, type ApiError } from "../api/http";
 import { offlineCache } from "../api/offlineCache";
 import type { PackSummary } from "../api/types";
 import { Icon } from "../components/Icon";
-import { AccountButton, BottomNav, ErrorMessage, LangToggle, Spinner, StatusPill } from "../components/ui";
+import { AccountButton, BottomNav, ErrorMessage, Spinner, StatusPill } from "../components/ui";
 import { config } from "../config";
 import { isStale, useOnline } from "../hooks/usePack";
 import type { Strings } from "../i18n/strings";
@@ -120,10 +120,7 @@ export function MyPacksScreen() {
       <main className="screen">
         <div className="row">
           <h1 className="title">{t.myPacks}</h1>
-          <div className="row gap-sm">
-            <LangToggle />
-            <AccountButton />
-          </div>
+          <AccountButton />
         </div>
 
         {packs && packs.length > 0 && (
@@ -133,7 +130,7 @@ export function MyPacksScreen() {
           </label>
         )}
 
-        {packs && packs.length > 1 && (
+        {(subjects.length > 1 || grades.length > 1 || filtering) && (
           <div className="filters">
             <label className="filter">
               <span className="label">{t.filterSubject}</span>
@@ -208,7 +205,7 @@ export function MyPacksScreen() {
                   </Link>
                   <StatusPill status={p.status} notInLibrary={p.failureKind === "unavailable"} />
                 </div>
-                <div className="row start gap-sm">
+                <div className="row start gap-sm wrap">
                   <span className="m">
                     {[t.gradeN(p.grade), p.subject.trim(), friendlyDate(p.createdAt, t, lang)].filter(Boolean).join(" · ")}
                   </span>
