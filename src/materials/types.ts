@@ -1,10 +1,11 @@
 // Shared types for the "My materials" feature (phase 2, screens P2·1 to P2·3).
 
-export const SUBJECTS = ["Science", "Math", "English", "Filipino", "AP"] as const;
-export type Subject = (typeof SUBJECTS)[number];
+import type { Grade } from "../api/types";
 
-export const GRADES = [1, 2, 3, 4, 5, 6] as const;
-export type Grade = (typeof GRADES)[number];
+/** Any subject: one of the suggested chips (data/subjects.ts) or what the teacher typed. */
+export type Subject = string;
+/** Same level scale as lesson packs: 0 Kindergarten, 1-12 Grade, 13-16 College year. */
+export type { Grade };
 
 /** Server-side status. The API (and the Event Grid function) owns these. */
 export type UploadStatus = "uploading" | "indexing" | "ready" | "failed";

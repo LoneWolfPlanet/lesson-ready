@@ -68,10 +68,10 @@ export function PackScreen() {
           <button
             type="button"
             className="icon-btn"
-            aria-pressed={textSize === "large"}
+            aria-pressed={textSize !== "normal"}
             aria-label={t.textSize}
             title={t.textSize}
-            onClick={() => setTextSize(textSize === "large" ? "normal" : "large")}
+            onClick={() => setTextSize(textSize === "small" ? "normal" : textSize === "normal" ? "large" : "small")}
           >
             <Icon name="textSize" />
           </button>

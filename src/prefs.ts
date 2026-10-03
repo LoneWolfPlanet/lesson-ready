@@ -4,12 +4,16 @@ import type { Grade, UiLanguage } from "./api/types";
 const K = {
   lang: "lr.lang",
   grade: "lr.lastGrade",
+  subject: "lr.lastSubject",
   recent: "lr.recentTopics",
   size: "lr.textSize",
+  theme: "lr.theme",
   notes: "lr.notesChecked",
 };
 
-export type TextSize = "normal" | "large";
+export type TextSize = "small" | "normal" | "large";
+/** "system" follows the device's light/dark setting. */
+export type Theme = "system" | "light" | "dark";
 
 function get(key: string): string | null {
   try {
@@ -37,11 +41,20 @@ export const prefs = {
   },
 
   lastGrade(): Grade | null {
-    const n = Number(get(K.grade));
-    return n >= 1 && n <= 6 ? (n as Grade) : null;
+    const v = get(K.grade);
+    if (v === null || v.trim() === "") return null; // Number("") is 0, which is Kindergarten
+    const n = Number(v);
+    return Number.isInteger(n) && n >= 0 && n <= 16 ? (n as Grade) : null;
   },
   setLastGrade(g: Grade) {
     set(K.grade, String(g));
+  },
+
+  lastSubject(): string {
+    return (get(K.subject) || "").slice(0, 60);
+  },
+  setLastSubject(s: string) {
+    set(K.subject, s.trim().slice(0, 60));
   },
 
   recentTopics(): string[] {
@@ -58,8 +71,17 @@ export const prefs = {
     set(K.recent, JSON.stringify(list.slice(0, 4)));
   },
 
+  theme(): Theme {
+    const v = get(K.theme);
+    return v === "light" || v === "dark" ? v : "system";
+  },
+  setTheme(v: Theme) {
+    set(K.theme, v);
+  },
+
   textSize(): TextSize {
-    return get(K.size) === "large" ? "large" : "normal";
+    const v = get(K.size);
+    return v === "small" || v === "large" ? v : "normal";
   },
   setTextSize(v: TextSize) {
     set(K.size, v);

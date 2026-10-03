@@ -86,7 +86,7 @@ const key = (v: unknown) => str(v).toLowerCase().replace(/[\s-]+/g, "_");
 
 function toGrade(v: unknown): Grade {
   const n = num(v, typeof v === "string" ? v.replace(/\D/g, "") : undefined) ?? 1;
-  return Math.min(6, Math.max(1, Math.round(n))) as Grade;
+  return Math.min(16, Math.max(0, Math.round(n))) as Grade;
 }
 
 const warnedStatuses = new Set<string>();
@@ -293,8 +293,9 @@ export function toPackList(json: unknown): PackSummary[] {
  * Body for POST /lesson-packs. The API's LessonPackRequest has only `topic` (1-200 chars)
  * and `grade` (1-12). Add `language` here once the API accepts it.
  */
-export function toCreateBody(req: { topic: string; grade: Grade; language: string }) {
-  return { topic: req.topic.slice(0, 200), grade: req.grade };
+export function toCreateBody(req: { topic: string; grade: Grade; language: string; subject?: string }) {
+  const subject = req.subject?.trim().slice(0, 60);
+  return { topic: req.topic.slice(0, 200), grade: req.grade, ...(subject ? { subject } : {}) };
 }
 
 /** Reads the new pack's id from the POST response. */

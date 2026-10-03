@@ -4,9 +4,8 @@ import { packsApi } from "../api/client";
 import { asApiError, type ApiError } from "../api/http";
 import { offlineCache } from "../api/offlineCache";
 import type { PackSummary } from "../api/types";
-import { useAuth } from "../auth/AuthContext";
 import { Icon } from "../components/Icon";
-import { BottomNav, ErrorMessage, LangToggle, Spinner, StatusPill } from "../components/ui";
+import { AccountButton, BottomNav, ErrorMessage, LangToggle, Spinner, StatusPill } from "../components/ui";
 import { config } from "../config";
 import { isStale, useOnline } from "../hooks/usePack";
 import type { Strings } from "../i18n/strings";
@@ -15,14 +14,12 @@ import { useUi } from "../i18n/UiContext";
 /** Screen 8: every pack, newest first, with plain statuses and an offline marker. */
 export function MyPacksScreen() {
   const { t, lang } = useUi();
-  const { user, signOut } = useAuth();
   const online = useOnline();
   const [packs, setPacks] = useState<PackSummary[] | null>(null);
   const [fromCache, setFromCache] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
   const [query, setQuery] = useState("");
   const [tick, setTick] = useState(0);
-  const [menu, setMenu] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -58,19 +55,7 @@ export function MyPacksScreen() {
           <h1 className="title">{t.myPacks}</h1>
           <div className="row gap-sm">
             <LangToggle />
-            <div className="menu-wrap">
-              <button type="button" className="icon-btn" aria-label={user?.name ?? "Account"} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
-                <Icon name="user" />
-              </button>
-              {menu && (
-                <div className="menu" role="menu">
-                  <p className="hint">{user?.email ?? user?.name}</p>
-                  <button type="button" role="menuitem" onClick={() => void signOut()}>
-                    {t.signOut}
-                  </button>
-                </div>
-              )}
-            </div>
+            <AccountButton />
           </div>
         </div>
 

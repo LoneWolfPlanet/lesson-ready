@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import type { ApiError } from "../api/http";
 import type { PackStatus } from "../api/types";
 import { useOnline } from "../hooks/usePack";
@@ -16,6 +16,54 @@ export function LangToggle() {
       <button type="button" aria-pressed={lang === "fil"} onClick={() => setLang("fil")}>
         FIL
       </button>
+    </div>
+  );
+}
+
+/** Opens the Settings page. Shown in the header of New, My packs and Materials. */
+export function AccountButton() {
+  const { t } = useUi();
+  return (
+    <Link to="/settings" className="icon-btn" aria-label={t.settings} title={t.settings}>
+      <Icon name="user" />
+    </Link>
+  );
+}
+
+/** Normal / Large reading size, app-wide. */
+export function TextSizeToggle() {
+  const { t, textSize, setTextSize } = useUi();
+  return (
+    <div className="lang theme-toggle" role="group" aria-label={t.textSize}>
+      {/* Each label is shown in roughly the size it picks, so the choice is visible before tapping. */}
+      <button type="button" aria-pressed={textSize === "small"} onClick={() => setTextSize("small")} style={{ fontSize: "0.72rem" }}>
+        {t.textSmall}
+      </button>
+      <button type="button" aria-pressed={textSize === "normal"} onClick={() => setTextSize("normal")}>
+        {t.textNormal}
+      </button>
+      <button type="button" aria-pressed={textSize === "large"} onClick={() => setTextSize("large")} style={{ fontSize: "1rem" }}>
+        {t.textLarge}
+      </button>
+    </div>
+  );
+}
+
+/** Auto (follow the phone) / Light / Dark. Same segmented style as the language toggle. */
+export function ThemeToggle() {
+  const { t, theme, setTheme } = useUi();
+  const options = [
+    ["system", t.themeSystem],
+    ["light", t.themeLight],
+    ["dark", t.themeDark],
+  ] as const;
+  return (
+    <div className="lang theme-toggle" role="group" aria-label={t.appearance}>
+      {options.map(([value, label]) => (
+        <button key={value} type="button" aria-pressed={theme === value} onClick={() => setTheme(value)}>
+          {label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -46,7 +94,7 @@ export function BottomNav() {
         <span>{t.navPacks}</span>
       </NavLink>
       <NavLink to="/materials" className={({ isActive }) => (isActive ? "on" : "")}>
-        <Icon name="packs" size={22} />
+        <Icon name="materials" size={22} />
         <span>{t.navMaterials}</span>
       </NavLink>
     </nav>

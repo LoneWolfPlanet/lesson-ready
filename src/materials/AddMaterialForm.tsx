@@ -1,16 +1,16 @@
 // The form behind "Add a file or photo": pick a file, then lesson title, subject and grade.
 
 import { useId, useRef, useState, type FormEvent } from "react";
+import { GRADES, OTHER_GRADES, OTHER_LEVELS } from "../api/types";
+import { MAX_SUBJECT_LENGTH, SUBJECT_CHIPS, isSuggestedSubject } from "../data/subjects";
+import { useUi } from "../i18n/UiContext";
 import {
   ACCEPT_ATTR,
   ACCEPTED_TYPES,
-  GRADES,
   MAX_FILE_BYTES,
   MAX_TITLE_LENGTH,
-  SUBJECTS,
   type Grade,
   type MaterialDetails,
-  type Subject,
 } from "./types";
 import { formatBytes } from "./format";
 
@@ -23,13 +23,17 @@ interface Props {
 
 export function AddMaterialForm({ initial, onSubmit, onCancel }: Props) {
   const ids = useId();
+  const { t } = useUi();
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
 
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [lessonTitle, setLessonTitle] = useState(initial?.lessonTitle ?? "");
-  const [subject, setSubject] = useState<Subject | null>(initial?.subject ?? null);
+  const [subject, setSubject] = useState(initial?.subject ?? "");
+  const [otherSubject, setOtherSubject] = useState(
+    () => !!initial?.subject && !isSuggestedSubject(initial.subject),
+  );
   const [grade, setGrade] = useState<Grade | null>(initial?.grade ?? null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -39,8 +43,8 @@ export function AddMaterialForm({ initial, onSubmit, onCancel }: Props) {
   const missing = {
     file: !file,
     title: titleTrimmed.length === 0,
-    subject: !subject,
-    grade: !grade,
+    subject: subject.trim().length === 0,
+    grade: grade === null, // 0 is Kindergarten, so never test with !grade
   };
   const valid = !missing.file && !missing.title && !missing.subject && !missing.grade;
 
@@ -65,11 +69,11 @@ export function AddMaterialForm({ initial, onSubmit, onCancel }: Props) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setShowErrors(true);
-    if (!valid || !file || !subject || !grade) return;
+    if (!valid || !file || grade === null) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await onSubmit(file, { lessonTitle: titleTrimmed, subject, grade });
+      await onSubmit(file, { lessonTitle: titleTrimmed, subject: subject.trim(), grade });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Couldn't start the upload. Please try again.");
       setSubmitting(false);
@@ -166,20 +170,54 @@ export function AddMaterialForm({ initial, onSubmit, onCancel }: Props) {
           Subject
         </span>
         <div className="mat-subjects">
-          {SUBJECTS.map((s) => (
-            <button
-              key={s}
-              type="button"
-              role="radio"
-              aria-checked={subject === s}
-              className={subject === s ? "on" : ""}
-              onClick={() => setSubject(s)}
-            >
-              {s}
-            </button>
-          ))}
+          {SUBJECT_CHIPS.map((s) => {
+            const on = !otherSubject && subject.toLowerCase() === s.toLowerCase();
+            return (
+              <button
+                key={s}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                className={on ? "on" : ""}
+                onClick={() => {
+                  setOtherSubject(false);
+                  setSubject(s);
+                }}
+              >
+                {s}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={otherSubject}
+            className={otherSubject ? "on" : ""}
+            onClick={() => {
+              setOtherSubject(true);
+              if (isSuggestedSubject(subject)) setSubject("");
+            }}
+          >
+            {t.subjectOther}
+          </button>
         </div>
-        {showErrors && missing.subject && <p className="mat-error">Pick a subject.</p>}
+        {otherSubject && (
+          <input
+            id={`${ids}-subject-other`}
+            className="mat-input"
+            value={subject}
+            maxLength={MAX_SUBJECT_LENGTH}
+            placeholder={t.subjectOtherPlaceholder}
+            aria-label={t.subjectOtherLabel}
+            autoComplete="off"
+            autoFocus
+            onChange={(e) => setSubject(e.target.value)}
+            aria-invalid={showErrors && missing.subject}
+          />
+        )}
+        {showErrors && missing.subject && (
+          <p className="mat-error">{otherSubject ? "Type the subject." : "Pick a subject."}</p>
+        )}
       </div>
 
       {/* Grade */}
@@ -194,7 +232,7 @@ export function AddMaterialForm({ initial, onSubmit, onCancel }: Props) {
               type="button"
               role="radio"
               aria-checked={grade === g}
-              aria-label={`Grade ${g}`}
+              aria-label={t.gradeN(g)}
               className={grade === g ? "on" : ""}
               onClick={() => setGrade(g)}
             >
@@ -202,7 +240,32 @@ export function AddMaterialForm({ initial, onSubmit, onCancel }: Props) {
             </button>
           ))}
         </div>
-        {showErrors && missing.grade && <p className="mat-error">Pick a grade.</p>}
+        <label className="other-grade">
+          <span>{t.otherGrade}</span>
+          <select
+            id={`${ids}-grade-other`}
+            className={grade !== null && OTHER_GRADES.includes(grade) ? "on" : ""}
+            value={grade !== null && OTHER_GRADES.includes(grade) ? String(grade) : ""}
+            onChange={(e) => setGrade(e.target.value === "" ? null : (Number(e.target.value) as Grade))}
+          >
+            <option value="">{t.chooseGrade}</option>
+            {OTHER_LEVELS.map(({ group, grades }) => {
+              const options = grades.map((g) => (
+                <option key={g} value={g}>
+                  {t.gradeN(g)}
+                </option>
+              ));
+              if (group === "kinder") return options;
+              const label = { jhs: t.levelGroupJhs, shs: t.levelGroupShs, college: t.levelGroupCollege }[group];
+              return (
+                <optgroup key={group} label={label}>
+                  {options}
+                </optgroup>
+              );
+            })}
+          </select>
+        </label>
+        {showErrors && missing.grade && <p className="mat-error">Pick a grade or level.</p>}
       </div>
 
       <div className="mat-spacer" />

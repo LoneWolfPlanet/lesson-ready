@@ -5,6 +5,21 @@ import type { UiLanguage } from "../api/types";
  * The Filipino text uses everyday Taglish teachers commonly use; please have a
  * native-speaking teacher review it before release.
  */
+const ORDINAL_EN = ["1st", "2nd", "3rd", "4th"];
+const ORDINAL_FIL = ["unang", "ikalawang", "ikatlong", "ikaapat na"];
+
+/** 0 = Kindergarten, 1-12 = Grade n, 13-16 = College year 1-4 (see Grade in api/types). */
+function levelEn(g: number): string {
+  if (g === 0) return "Kindergarten";
+  if (g >= 13) return `College, ${ORDINAL_EN[g - 13] ?? `${g - 12}th`} year`;
+  return `Grade ${g}`;
+}
+function levelFil(g: number): string {
+  if (g === 0) return "Kindergarten";
+  if (g >= 13) return `Kolehiyo, ${ORDINAL_FIL[g - 13] ?? `ika-${g - 12}`} taon`;
+  return `Grade ${g}`;
+}
+
 const en = {
   appName: "LessonReady",
   // welcome
@@ -24,11 +39,23 @@ const en = {
   whatTeaching: "What are you teaching?",
   topicPlaceholder: "e.g. Photosynthesis",
   recent: "Recent",
-  popularIn: (g: number) => `Popular in Grade ${g}`,
+  subject: "Subject",
+  otherGrade: "Other level",
+  chooseGrade: "Choose…",
+  levelGroupKinder: "Kindergarten",
+  levelGroupJhs: "Junior high school",
+  levelGroupShs: "Senior high school",
+  levelGroupCollege: "College",
+  subjectOther: "Other…",
+  subjectOtherLabel: "Type the subject",
+  subjectOtherPlaceholder: "e.g. Music, Health, Computer",
+  popularIn: (g: number) => `Popular in ${levelEn(g)}`,
   grade: "Grade",
-  gradeN: (g: number) => `Grade ${g}`,
-  gradeRemembered: (g: number) => `Grade ${g} is remembered from last time.`,
+  gradeN: (g: number) => levelEn(g),
+  gradeRemembered: (g: number) => `${levelEn(g)} is remembered from last time.`,
   makePack: "Make my lesson pack",
+  useMyMaterials: "Use my materials",
+  optional: "Optional",
   howItWorks: "How it works",
   howItWorksBody:
     "Type a topic and pick a grade. LessonReady writes a lesson plan, a short quiz and teacher notes, then checks them for your grade. It takes a few minutes, and you can leave the app while it works.",
@@ -73,6 +100,16 @@ const en = {
   share: "Share",
   print: "Print",
   textSize: "Text size",
+  appearance: "Appearance",
+  settings: "Settings",
+  signedInAs: "Signed in as",
+  languageLabel: "Language",
+  textSmall: "Small",
+  textNormal: "Normal",
+  textLarge: "Large",
+  themeSystem: "Auto",
+  themeLight: "Light",
+  themeDark: "Dark",
   savedOffline: "Saved for offline",
   showingSaved: "No connection. Showing the copy saved on this phone.",
   notesHint: "Tick items off as you prepare. Ticks stay on this device.",
@@ -131,11 +168,23 @@ const fil: Strings = {
   whatTeaching: "Ano ang ituturo mo?",
   topicPlaceholder: "hal. Photosynthesis",
   recent: "Kamakailan",
-  popularIn: (g) => `Sikat sa Grade ${g}`,
+  subject: "Asignatura",
+  otherGrade: "Ibang antas",
+  chooseGrade: "Pumili…",
+  levelGroupKinder: "Kindergarten",
+  levelGroupJhs: "Junior high school",
+  levelGroupShs: "Senior high school",
+  levelGroupCollege: "Kolehiyo",
+  subjectOther: "Iba pa…",
+  subjectOtherLabel: "I-type ang asignatura",
+  subjectOtherPlaceholder: "hal. Music, Health, Computer",
+  popularIn: (g) => `Sikat sa ${levelFil(g)}`,
   grade: "Grade",
-  gradeN: (g) => `Grade ${g}`,
-  gradeRemembered: (g) => `Naalala ang Grade ${g} mula noong huli.`,
+  gradeN: (g) => levelFil(g),
+  gradeRemembered: (g) => `Naalala ang ${levelFil(g)} mula noong huli.`,
   makePack: "Gawin ang lesson pack ko",
+  useMyMaterials: "Gamitin ang aking materyales",
+  optional: "Opsyonal",
   howItWorks: "Paano ito gumagana",
   howItWorksBody:
     "Mag-type ng topic at pumili ng grade. Gagawa ang LessonReady ng lesson plan, maikling quiz at teacher notes, saka susuriin ito para sa grade mo. Ilang minuto lang ito, at puwede kang umalis sa app habang ginagawa.",
@@ -178,6 +227,16 @@ const fil: Strings = {
   share: "I-share",
   print: "I-print",
   textSize: "Laki ng text",
+  appearance: "Itsura",
+  settings: "Settings",
+  signedInAs: "Naka-sign in bilang",
+  languageLabel: "Wika",
+  textSmall: "Maliit",
+  textNormal: "Karaniwan",
+  textLarge: "Malaki",
+  themeSystem: "Auto",
+  themeLight: "Maliwanag",
+  themeDark: "Madilim",
   savedOffline: "Naka-save para offline",
   showingSaved: "Walang koneksyon. Ipinapakita ang kopyang naka-save sa phone na ito.",
   notesHint: "I-tick habang naghahanda. Sa device na ito lang naka-save ang ticks.",

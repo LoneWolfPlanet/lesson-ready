@@ -5,10 +5,13 @@ import { materialsApi, type TokenGetter } from "./api";
 import { uploadToBlob } from "./blobUpload";
 import type { LocalUpload, Material, MaterialDetails } from "./types";
 
-const POLL_MS = 5000;
 
 export function useMaterials(getToken: TokenGetter) {
-  const api = useMemo(() => materialsApi(getToken), [getToken]);
+  // Keep the latest token function without rebuilding the client (and re-fetching) on every render.
+  const tokenRef = useRef(getToken);
+  tokenRef.current = getToken;
+  const api = useMemo(() => materialsApi(() => tokenRef.current()), []);
+
   const [materials, setMaterials] = useState<Material[]>([]);
   const [local, setLocal] = useState<Record<string, LocalUpload>>({});
   const [loading, setLoading] = useState(true);
@@ -30,14 +33,25 @@ export function useMaterials(getToken: TokenGetter) {
     void refresh();
   }, [refresh]);
 
-  // Poll only while the server is still working on something.
-  const busy = materials.some((m) => m.status === "uploading" || m.status === "indexing");
+  // Poll only while there's real work: a file being read, or an upload running on this device.
+  // "uploading" records with no upload here are left over from an interrupted upload.
+  const busy = materials.some(
+    (m) => m.status === "indexing" || (m.status === "uploading" && local[m.id]?.state === "sending"),
+  );
   useEffect(() => {
     if (!busy) return;
-    const t = setInterval(() => void refresh(), POLL_MS);
-    return () => clearInterval(t);
+    let delay = 5000;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      timer = setTimeout(async () => {
+        if (document.visibilityState === "visible") await refresh();
+        delay = Math.min(delay * 1.5, 60000); // 5s, 7.5s, 11s … up to 1 min
+        tick();
+      }, delay);
+    };
+    tick();
+    return () => clearTimeout(timer);
   }, [busy, refresh]);
-
   // Cancel in-flight uploads if the screen unmounts.
   useEffect(() => {
     const map = controllers.current;

@@ -12,7 +12,7 @@ import type { Grade } from "../api/types";
  * Only topics confirmed in the library so far are listed; add the rest from the
  * `lessons` container.
  */
-export const SUGGESTIONS: Record<Grade, string[]> = {
+export const SUGGESTIONS: Partial<Record<Grade, string[]>> = {
   1: [],
   2: ["Parts of a plant"],
   3: [],

@@ -1,48 +1,41 @@
-/* My materials (phase 2). Tokens copied from the LessonReady UX flow (app light theme).
-   If your app already defines these, delete the :root block and keep the rest. */
+/* My materials (phase 2). Mapped onto the app's design tokens (styles/app.css),
+   so light and dark themes apply here too. */
 :root {
-  --a-bg: #f7f6f2;
-  --a-surface: #ffffff;
-  --a-fg: #1b2420;
-  --a-muted: #62706a;
-  --a-line: #e4e1d8;
-  --a-primary: #1f6f5c;
-  --a-primary-fg: #ffffff;
-  --a-soft: #dcefe7;
-  --a-mark-soft: #fdf1d6;
-  --a-warn: #8a5a00;
-  --a-err: #8f3423;
-  --a-err-soft: #f7e3de;
-  --a-run: #34506b;
-  --a-run-soft: #e5ecf3;
-  --a-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --a-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --a-bg: var(--bg);
+  --a-surface: var(--surface);
+  --a-fg: var(--fg);
+  --a-muted: var(--muted);
+  --a-line: var(--line);
+  --a-primary: var(--primary);
+  --a-primary-fg: var(--primary-fg);
+  --a-soft: var(--soft);
+  --a-mark-soft: var(--mark-soft);
+  --a-warn: var(--warn);
+  --a-err: var(--fail-fg);
+  --a-err-soft: var(--fail-bg);
+  --a-run: var(--run-fg);
+  --a-run-soft: var(--run-bg);
+  --a-display: var(--display);
+  --a-body: var(--body);
 }
 
 .mat-screen {
-  min-height: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px;
-  background: var(--a-bg);
-  color: var(--a-fg);
-  font-family: var(--a-body);
-  font-size: 15px;
-  line-height: 1.4;
 }
 .mat-form { display: flex; flex-direction: column; gap: 16px; flex: 1; }
 .mat-form-head { display: flex; justify-content: flex-start; }
 
-.mat-title { font-family: var(--a-display); font-weight: 700; font-size: 24px; line-height: 1.15; margin: 0; }
-.mat-sub { color: var(--a-muted); margin: 0; font-size: 14px; }
-.mat-label { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--a-muted); }
-.mat-meta { font-size: 12.5px; color: var(--a-muted); }
+.mat-title { font-family: var(--a-display); font-weight: 700; font-size: 1.5rem; line-height: 1.15; margin: 0; }
+.mat-sub { color: var(--a-muted); margin: 0; font-size: 0.875rem; }
+.mat-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--a-muted); }
+.mat-meta { font-size: 0.7812rem; color: var(--a-muted); }
 .mat-field { display: flex; flex-direction: column; gap: 8px; }
 .mat-spacer { flex: 1; min-height: 8px; }
 
 .mat-input {
-  font: inherit; font-size: 16px; /* 16px stops iOS zooming on focus */
+  font: inherit; font-size: max(16px, 1rem); /* never below 16px: iOS zooms into smaller inputs */
   background: var(--a-surface); color: var(--a-fg);
   border: 1.5px solid var(--a-line); border-radius: 12px;
   padding: 12px 14px; min-height: 48px;
@@ -52,17 +45,17 @@
 
 /* buttons */
 .mat-btn {
-  font: inherit; font-weight: 700; font-size: 16px;
+  font: inherit; font-weight: 700; font-size: 1rem;
   background: var(--a-primary); color: var(--a-primary-fg);
   border: 0; border-radius: 14px; padding: 14px; min-height: 52px; width: 100%;
   cursor: pointer;
 }
 .mat-btn:disabled { opacity: 0.6; cursor: default; }
 .mat-link {
-  font: inherit; font-weight: 700; font-size: 14px; color: var(--a-primary);
+  font: inherit; font-weight: 700; font-size: 0.875rem; color: var(--a-primary);
   background: none; border: 0; padding: 10px 4px; min-height: 44px; cursor: pointer;
 }
-.mat-link-quiet { color: var(--a-muted); font-weight: 400; font-size: 13px; padding: 4px; min-height: 0; }
+.mat-link-quiet { color: var(--a-muted); font-weight: 400; font-size: 0.8125rem; padding: 4px; min-height: 0; }
 .mat-link-danger { color: var(--a-err); }
 .mat-btn:focus-visible, .mat-link:focus-visible, .mat-pick-btn:focus-visible,
 .mat-subjects button:focus-visible, .mat-grades button:focus-visible, .mat-chips button:focus-visible {
@@ -72,26 +65,26 @@
 /* file picker */
 .mat-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .mat-pick-btn {
-  font: inherit; font-weight: 700; font-size: 14px; color: var(--a-primary);
+  font: inherit; font-weight: 700; font-size: 0.875rem; color: var(--a-primary);
   display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left;
   background: var(--a-surface); border: 1.5px dashed var(--a-line); border-radius: 12px;
   padding: 14px 12px; min-height: 72px; cursor: pointer;
 }
-.mat-pick-btn small { font-weight: 400; font-size: 12px; color: var(--a-muted); }
+.mat-pick-btn small { font-weight: 400; font-size: 0.75rem; color: var(--a-muted); }
 
 /* subject chips and grade tiles */
 .mat-subjects, .mat-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .mat-subjects button, .mat-chips button {
-  font: inherit; font-weight: 700; font-size: 14px; color: var(--a-fg);
+  font: inherit; font-weight: 700; font-size: 0.875rem; color: var(--a-fg);
   background: var(--a-surface); border: 1.5px solid var(--a-line); border-radius: 999px;
   padding: 8px 14px; min-height: 44px; cursor: pointer;
 }
-.mat-chips button { min-height: 36px; padding: 6px 12px; font-size: 13px; }
+.mat-chips button { min-height: 36px; padding: 6px 12px; font-size: 0.8125rem; }
 .mat-subjects button.on { background: var(--a-primary); color: var(--a-primary-fg); border-color: var(--a-primary); }
 .mat-chips button.on { background: var(--a-fg); color: var(--a-surface); border-color: var(--a-fg); }
 .mat-grades { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
 .mat-grades button {
-  font: inherit; font-weight: 700; font-size: 18px; color: var(--a-fg);
+  font: inherit; font-weight: 700; font-size: 1.125rem; color: var(--a-fg);
   background: var(--a-surface); border: 1.5px solid var(--a-line); border-radius: 12px;
   min-height: 48px; cursor: pointer; font-variant-numeric: tabular-nums;
 }
@@ -105,20 +98,20 @@
 }
 .mat-file-icon {
   width: 34px; height: 40px; border-radius: 7px; background: var(--a-soft);
-  display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; color: var(--a-primary);
+  display: grid; place-items: center; font-style: normal; font-size: 0.625rem; font-weight: 700; color: var(--a-primary);
 }
 .mat-file-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.mat-file-name { font-weight: 700; font-size: 14.5px; overflow-wrap: anywhere; }
+.mat-file-name { font-weight: 700; font-size: 0.9062rem; overflow-wrap: anywhere; }
 .mat-row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 2px; }
 .mat-upbar { height: 5px; background: var(--a-line); border-radius: 99px; overflow: hidden; margin-top: 6px; }
 .mat-upbar i { display: block; height: 100%; background: var(--a-primary); border-radius: 99px; transition: width 0.3s ease; }
 
-.mat-pill { border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.mat-pill { border-radius: 999px; padding: 4px 10px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
 .mat-pill.ok { background: var(--a-soft); color: var(--a-primary); }
 .mat-pill.run { background: var(--a-run-soft); color: var(--a-run); }
 .mat-pill.err { background: var(--a-err-soft); color: var(--a-err); }
 
-.mat-error { color: var(--a-err); font-size: 13.5px; margin: 0; }
+.mat-error { color: var(--a-err); font-size: 0.8438rem; margin: 0; }
 .mat-error-box { background: var(--a-err-soft); border-radius: 12px; padding: 10px 12px; }
 .mat-empty {
   display: flex; flex-direction: column; gap: 6px; padding: 18px 16px;

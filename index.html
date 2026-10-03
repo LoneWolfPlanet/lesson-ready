@@ -8,6 +8,14 @@
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <title>LessonReady</title>
+    <script>
+      try {
+        var t = localStorage.getItem("lr.theme");
+        if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+        var dark = t === "dark" || (t !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) document.querySelector('meta[name="theme-color"]').setAttribute("content", "#121816");
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -4,8 +4,24 @@
  * server means editing the adapter, not the screens.
  */
 
-export type Grade = 1 | 2 | 3 | 4 | 5 | 6;
+/**
+ * Learner level as one number, so the API and agents keep a single "grade" field:
+ *   0 = Kindergarten, 1-12 = Grade 1-12, 13-16 = College 1st-4th year.
+ * Show it with t.gradeN(g), never as a raw number.
+ */
+export type Grade = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16;
+export const MIN_GRADE = 0;
+export const MAX_GRADE = 16;
+/** Shown as tiles on the New screen. */
 export const GRADES: Grade[] = [1, 2, 3, 4, 5, 6];
+/** Picked from "Other level" on the New screen, grouped. */
+export const OTHER_LEVELS: { group: "kinder" | "jhs" | "shs" | "college"; grades: Grade[] }[] = [
+  { group: "kinder", grades: [0] },
+  { group: "jhs", grades: [7, 8, 9, 10] },
+  { group: "shs", grades: [11, 12] },
+  { group: "college", grades: [13, 14, 15, 16] },
+];
+export const OTHER_GRADES: Grade[] = OTHER_LEVELS.flatMap((l) => l.grades);
 
 export type UiLanguage = "en" | "fil";
 
@@ -89,4 +105,6 @@ export interface NewPackRequest {
   grade: Grade;
   /** Language of the lesson content (not just the UI). */
   language: UiLanguage;
+  /** Optional. A suggested subject or anything the teacher typed. */
+  subject?: string;
 }

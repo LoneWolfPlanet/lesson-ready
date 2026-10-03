@@ -1,6 +1,7 @@
 // One file in "My materials", with the plain-word status pills from the design.
 
 import { useState } from "react";
+import { useUi } from "../i18n/UiContext";
 import { formatBytes } from "./format";
 import { ACCEPTED_TYPES, type LocalUpload, type Material } from "./types";
 
@@ -36,6 +37,7 @@ function viewFor(m: Material, local?: LocalUpload): View {
 }
 
 export function MaterialRow({ material: m, local, onRetry, onRemove }: Props) {
+  const { t } = useUi();
   const [confirming, setConfirming] = useState(false);
   const [removing, setRemoving] = useState(false);
   const view = viewFor(m, local);
@@ -57,7 +59,7 @@ export function MaterialRow({ material: m, local, onRetry, onRemove }: Props) {
       <div className="mat-file-text">
         <div className="mat-file-name">{m.lessonTitle}</div>
         <div className="mat-meta">
-          {view.detail ?? `${m.subject} · Grade ${m.grade} · ${formatBytes(m.sizeBytes)}`}
+          {view.detail ?? `${m.subject} · ${t.gradeN(m.grade)} · ${formatBytes(m.sizeBytes)}`}
         </div>
         {local?.state === "sending" && (
           <div
