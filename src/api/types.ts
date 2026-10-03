@@ -30,6 +30,7 @@ export type PackStatus =
   | "working" // still being written or checked
   | "ready" // passed review: "Ready to use"
   | "check" // review raised issues: "Check before use"
+  | "reviewed" // the teacher signed it off: "Reviewed". Only the teacher sets this.
   | "failed"; // generation could not finish
 
 /** Which step the generator is on, for the "Writing your lesson" card. */
@@ -52,11 +53,19 @@ export interface Activity {
 }
 
 export interface QuizQuestion {
+  /** The API's question id (q1, q2…), used to save edits. */
+  id: string;
   prompt: string;
   options: string[];
   /** Index into options. */
   answer: number;
   explanation?: string;
+  /** The teacher saved or confirmed this question; review notes on it are hidden. */
+  checked?: boolean;
+  /** The teacher changed the wording, answers or explanation. */
+  edited?: boolean;
+  /** The teacher wrote this question; the automatic review never saw it. */
+  added?: boolean;
 }
 
 /** Something the reviewer wants the teacher to look at. */
@@ -71,6 +80,8 @@ export interface PackSummary {
   id: string;
   topic: string;
   grade: Grade;
+  /** The teacher's subject, as typed; "" when none was given. Always present, so old copies can be told apart. */
+  subject: string;
   status: PackStatus;
   createdAt: string; // ISO
   /** Set on failed packs: "unavailable" = topic not in the curriculum library. */
@@ -88,8 +99,15 @@ export interface Pack extends PackSummary {
   quiz: QuizQuestion[];
   /** Teaching tips, shown as the Notes checklist. */
   notes: string[];
-  /** Set when the pack passed review. */
+  /** Set when the pack passed the automatic review (not the teacher's sign-off; that is status "reviewed"). */
   reviewed: boolean;
+  /** When the teacher marked it as reviewed. */
+  reviewedAt?: string;
+  /** The teacher saved or confirmed the lesson / the notes; review notes on them are hidden. */
+  lessonChecked?: boolean;
+  lessonEdited?: boolean;
+  notesChecked?: boolean;
+  notesEdited?: boolean;
   issues: ReviewIssue[];
   /** Plain-language reason, only when status is "failed". */
   failureReason?: string;
@@ -98,6 +116,15 @@ export interface Pack extends PackSummary {
    * (grounding found nothing), so the teacher should pick another topic, not retry.
    */
   failureKind?: "unavailable" | "error";
+}
+
+/** The teacher's version of the Lesson tab, as saved by PUT /lesson-packs/{id}/lesson. */
+export interface LessonDraft {
+  overview?: string;
+  objectives: string[];
+  sections: LessonSection[];
+  vocabulary: VocabularyItem[];
+  activity?: Activity;
 }
 
 export interface NewPackRequest {

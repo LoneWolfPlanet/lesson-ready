@@ -1,10 +1,10 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { packsApi } from "../api/client";
+import { duplicateOf, packsApi } from "../api/client";
 import { asApiError, type ApiError } from "../api/http";
-import { GRADES, OTHER_GRADES, OTHER_LEVELS, type Grade } from "../api/types";
+import { GRADES, OTHER_GRADES, OTHER_LEVELS, type Grade, type PackSummary } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
-import { AccountButton, BottomNav, ErrorMessage, LangToggle } from "../components/ui";
+import { AccountButton, BottomNav, ErrorMessage, LangToggle, StatusPill } from "../components/ui";
 import { Icon } from "../components/Icon";
 import { SUGGESTIONS } from "../data/suggestions";
 import { SUBJECT_CHIPS, isSuggestedSubject } from "../data/subjects";
@@ -38,14 +38,23 @@ export function NewPackScreen() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
   const [needTopic, setNeedTopic] = useState(false);
+  const [duplicate, setDuplicate] = useState<PackSummary | null>(null);
   const recent = prefs.recentTopics();
 
   const hour = new Date().getHours();
   const name = user?.firstName ?? "";
   const greeting = hour < 12 ? t.goodMorning(name) : hour < 18 ? t.goodAfternoon(name) : t.goodEvening(name);
 
+  // A "you already have this" notice belongs to the inputs it was shown for.
+  useEffect(() => setDuplicate(null), [topic, grade, subject]);
+
   async function submit(e: FormEvent) {
     e.preventDefault();
+    await send(false);
+  }
+
+  /** force: the teacher chose "Make a new one anyway" after seeing the existing pack. */
+  async function send(force: boolean) {
     const clean = topic.trim();
     if (!clean || grade === null) {
       setNeedTopic(!clean);
@@ -53,15 +62,18 @@ export function NewPackScreen() {
     }
     setSending(true);
     setError(null);
+    setDuplicate(null);
     try {
       const cleanSubject = subject.trim();
-      const id = await packsApi.create({ topic: clean, grade, language: lang, subject: cleanSubject || undefined });
+      const id = await packsApi.create({ topic: clean, grade, language: lang, subject: cleanSubject || undefined }, { force });
       prefs.setLastGrade(grade);
       prefs.setLastSubject(cleanSubject);
       prefs.addRecentTopic(clean);
       navigate(`/packs/${id}/working`);
     } catch (err) {
-      setError(asApiError(err));
+      const existing = duplicateOf(err);
+      if (existing) setDuplicate(existing);
+      else setError(asApiError(err));
       setSending(false);
     }
   }
@@ -249,6 +261,42 @@ export function NewPackScreen() {
           <div className="spacer" />
 
           {error && <ErrorMessage error={error} />}
+
+          {duplicate && (
+            <div className="banner dup" role="alert">
+              <b>{t.dupTitle}</b>
+              <span>{t.dupBody}</span>
+              <div className="dup-pack">
+                <div className="row">
+                  <span className="t">{duplicate.topic}</span>
+                  <StatusPill status={duplicate.status} notInLibrary={duplicate.failureKind === "unavailable"} />
+                </div>
+                <span className="m">
+                  {[
+                    t.gradeN(duplicate.grade),
+                    duplicate.subject.trim(),
+                    new Date(duplicate.createdAt).toLocaleDateString(lang === "fil" ? "fil-PH" : "en-PH", { month: "short", day: "numeric" }),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </div>
+              <div className="q-tools">
+                <button
+                  type="button"
+                  className="btn small"
+                  onClick={() =>
+                    navigate(duplicate.status === "working" ? `/packs/${duplicate.id}/working` : `/packs/${duplicate.id}`)
+                  }
+                >
+                  {t.dupOpen}
+                </button>
+                <button type="button" className="btn ghost small" disabled={sending} onClick={() => send(true)}>
+                  {sending ? t.loading : t.dupMakeAnyway}
+                </button>
+              </div>
+            </div>
+          )}
 
           <button className="btn" type="submit" disabled={sending || grade === null}>
             {sending ? t.loading : t.makePack}

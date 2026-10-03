@@ -2,13 +2,17 @@ import { authService } from "../auth/AuthContext";
 import { config } from "../config";
 
 /** Every failure is reduced to one of these, so screens can show a friendly message. */
-export type ApiErrorKind = "offline" | "signin" | "notfound" | "invalid" | "server" | "busy";
+export type ApiErrorKind = "offline" | "signin" | "notfound" | "invalid" | "conflict" | "server" | "busy";
 
 export class ApiError extends Error {
   constructor(
     public kind: ApiErrorKind,
     message: string,
     public status?: number,
+    /** The API's `detail` text, when it sent one. For logic and logs, not for showing as-is. */
+    public detail?: string,
+    /** The API's `detail` when it is an object, e.g. { code: "duplicate_pack", existing: {...} }. */
+    public info?: Record<string, unknown>,
   ) {
     super(message);
   }
@@ -21,6 +25,7 @@ function kindForStatus(status: number): ApiErrorKind {
   if (status === 401 || status === 403) return "signin";
   if (status === 404) return "notfound";
   if (status === 400 || status === 422) return "invalid";
+  if (status === 409) return "conflict";
   if (status === 429) return "busy";
   return "server";
 }
@@ -65,10 +70,26 @@ export async function request<T>(path: string, init: RequestInit & { retry?: boo
     }
 
     const kind = kindForStatus(res.status);
-    lastError = new ApiError(kind, `HTTP ${res.status}`, res.status);
+    const detail = await readDetail(res);
+    lastError = new ApiError(
+      kind,
+      `HTTP ${res.status}`,
+      res.status,
+      typeof detail === "string" ? detail : undefined,
+      detail && typeof detail === "object" ? (detail as Record<string, unknown>) : undefined,
+    );
     if (kind !== "server" && kind !== "busy") break; // retrying won't help
   }
   throw lastError;
+}
+
+async function readDetail(res: Response): Promise<unknown> {
+  try {
+    const body = (await res.json()) as { detail?: unknown };
+    return body.detail;
+  } catch {
+    return undefined;
+  }
 }
 
 export function asApiError(e: unknown): ApiError {

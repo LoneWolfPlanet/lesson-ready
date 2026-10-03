@@ -37,6 +37,8 @@ interface PackState {
   /** True when polling stopped because the pack took far longer than expected. */
   stalled: boolean;
   reload(): void;
+  /** Shows a pack the caller already has, e.g. the API's reply after an edit. */
+  replace(pack: Pack): void;
 }
 
 /**
@@ -92,5 +94,15 @@ export function usePack(id: string | undefined): PackState {
     // `online` reloads immediately when the connection comes back.
   }, [id, tick, online]);
 
-  return { pack, fromCache, error, stalled, reload: () => setTick((n) => n + 1) };
+  return {
+    pack,
+    fromCache,
+    error,
+    stalled,
+    reload: () => setTick((n) => n + 1),
+    replace: (next: Pack) => {
+      setPack(next);
+      setFromCache(false);
+    },
+  };
 }

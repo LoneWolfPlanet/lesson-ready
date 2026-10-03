@@ -74,6 +74,7 @@ export function StatusPill({ status, notInLibrary }: { status: PackStatus; notIn
   const map: Record<PackStatus, [string, string]> = {
     ready: ["ok", t.statusReady],
     check: ["warn", t.statusCheck],
+    reviewed: ["done", t.statusReviewed],
     working: ["run", t.statusWorking],
     failed: ["fail", t.statusFailed],
   };
@@ -120,6 +121,7 @@ export function ErrorMessage({ error, onRetry }: { error: ApiError; onRetry?: ()
     signin: t.errSignin,
     notfound: t.errNotFound,
     invalid: t.errInvalid,
+    conflict: t.errConflict,
     server: t.errServer,
     busy: t.errBusy,
   }[error.kind];

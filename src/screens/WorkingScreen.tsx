@@ -15,7 +15,7 @@ export function WorkingScreen() {
   const { t } = useUi();
   const navigate = useNavigate();
 
-  if (pack && (pack.status === "ready" || pack.status === "check")) {
+  if (pack && (pack.status === "ready" || pack.status === "check" || pack.status === "reviewed")) {
     return <Navigate to={`/packs/${pack.id}`} replace />;
   }
 

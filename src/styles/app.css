@@ -536,6 +536,21 @@ a {
   background: var(--fail-bg);
   color: var(--fail-fg);
 }
+.pill.done {
+  background: var(--primary);
+  color: var(--primary-fg);
+}
+.review-control {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.review-control.banner {
+  justify-items: stretch;
+}
+.review-control .q-tools {
+  margin-top: 0;
+}
 .reviewed {
   font-size: 0.8rem;
   font-weight: 700;
@@ -988,6 +1003,217 @@ button.back-link {
   color: var(--warn);
   margin-bottom: 8px;
 }
+/* ---------- editing quiz questions ---------- */
+.q-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.q-checked {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--primary);
+}
+.quiz-item.editing {
+  border: 1.5px solid var(--primary);
+}
+.q-editor {
+  display: grid;
+  gap: 14px;
+}
+.q-editor-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.q-editor .field {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.q-editor textarea.input {
+  resize: vertical;
+  line-height: 1.4;
+}
+.opt-edit-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.opt-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.opt-edit .input {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 12px;
+}
+.opt-radio {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+}
+.opt-radio input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.opt-radio:has(input:focus-visible) {
+  outline: 3px solid var(--mark);
+  outline-offset: 2px;
+}
+.opt-edit.right .opt-radio {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-fg);
+}
+.opt-edit.right .input {
+  border-color: var(--primary);
+}
+
+/* Quiet text action, like "Remove" on the Materials screen. */
+.quiet-link {
+  border: 0;
+  background: none;
+  padding: 4px;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+.quiet-link:hover:not(:disabled),
+.quiet-link:focus-visible,
+.quiet-link[aria-expanded="true"] {
+  color: var(--fail-fg);
+}
+.push-right {
+  margin-left: auto;
+}
+.quiz-item .delete-confirm {
+  margin-top: 10px;
+}
+
+/* ---------- editing the lesson and notes ---------- */
+.q-tools.top {
+  margin-top: 0;
+}
+.pack-editor {
+  display: grid;
+  gap: 18px;
+}
+.pack-editor .field {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.pack-editor textarea.input {
+  resize: vertical;
+  line-height: 1.45;
+}
+.text-list,
+.part-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.text-row,
+.vocab-edit {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.text-row .input,
+.vocab-edit .input {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 12px;
+}
+.vocab-edit .input:first-child {
+  flex: 0 1 34%;
+  font-weight: 700;
+}
+.row-n {
+  flex: none;
+  width: 26px;
+  padding-top: 12px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+.part-edit {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.part-n {
+  color: var(--primary);
+}
+.part-tools {
+  display: flex;
+  gap: 6px;
+}
+.part-tools .icon-btn {
+  width: 40px;
+  height: 40px;
+}
+.activity-edit {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.link-btn.danger {
+  color: var(--fail-fg);
+}
+/* Save / Cancel stays in reach while scrolling a long lesson. */
+.editor-bar {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  gap: 6px;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+}
+.editor-bar .q-tools {
+  margin-top: 0;
+}
+.tabs button:disabled {
+  opacity: 0.45;
+}
+
 .checklist {
   list-style: none;
   padding: 0;
@@ -1150,6 +1376,124 @@ button.back-link {
   outline: none;
   color: var(--fg);
 }
+/* Subject and level filters on My packs: two native selects side by side, stacked on narrow phones. */
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 10px;
+}
+.filter {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.filter select {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 8px 12px;
+  background: var(--surface);
+  color: var(--fg);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  font: inherit;
+}
+.filter select.on {
+  border-color: var(--primary);
+  background: var(--soft);
+  color: var(--primary);
+  font-weight: 700;
+}
+/* Pack card: the topic link covers the whole card (::after), and the Delete text button sits above it. */
+.pack-item {
+  display: grid;
+  gap: 8px;
+}
+.pack {
+  position: relative;
+}
+.pack-link {
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+.pack-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.pack-link:focus-visible {
+  outline: none;
+}
+.pack:has(.pack-link:focus-visible) {
+  outline: 3px solid var(--mark);
+  outline-offset: 2px;
+}
+.pack:has(.pack-link:active) {
+  background: var(--bg);
+}
+.pack.confirming {
+  border-color: var(--fail-fg);
+}
+/* Quiet text link on its own line, the same as "Remove" on the Materials screen. */
+.pack-del {
+  position: relative;
+  z-index: 1;
+  justify-self: start;
+  margin: 2px 0 -4px -4px;
+  padding: 4px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+.pack-del:hover:not(:disabled),
+.pack-del:focus-visible,
+.pack-del[aria-expanded="true"] {
+  color: var(--fail-fg);
+}
+.delete-confirm {
+  gap: 8px;
+}
+.delete-confirm span {
+  color: var(--fg);
+}
+.btn.danger {
+  background: var(--fail-fg);
+  color: var(--surface);
+}
+.btn.danger:active:not(:disabled) {
+  background: var(--fail-fg);
+  filter: brightness(0.9);
+}
+/* "You already have this pack" on the New screen: the existing pack shown like a My packs card. */
+.banner.dup {
+  gap: 8px;
+}
+.banner.dup > span {
+  color: var(--fg);
+}
+.dup-pack {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--fg);
+}
+.dup-pack .t {
+  font-weight: 700;
+}
+.dup-pack .m {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.banner.dup .q-tools {
+  margin-top: 0;
+}
 .pack-list {
   list-style: none;
   margin: 0;
@@ -1165,9 +1509,6 @@ button.back-link {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   text-decoration: none;
-}
-.pack:active {
-  background: var(--bg);
 }
 .pack .t {
   font-weight: 700;

@@ -21,6 +21,7 @@ import { config } from "../config";
 import type {
   Activity,
   Grade,
+  LessonDraft,
   LessonSection,
   Pack,
   PackStatus,
@@ -45,6 +46,8 @@ const STATUS_MAP: Record<string, PackStatus> = {
   writing: "working",
   reviewing: "working",
   ready: "ready",
+  // Set only by the teacher (PUT /lesson-packs/{id}/review).
+  reviewed: "reviewed",
   ready_with_notes: "check",
   completed: "ready",
   succeeded: "ready",
@@ -163,55 +166,80 @@ function toQuiz(quiz: unknown): { questions: QuizQuestion[]; ids: string[] } {
       answer = Math.max(0, options.findIndex((o) => o === text));
     }
     return {
+      id: ids[i],
       prompt: str(r.question, r.prompt, r.text),
       options,
       answer,
       explanation: str(r.explanation, r.rationale) || undefined,
+      checked: r.teacherChecked === true,
+      edited: r.teacherEdited === true,
+      added: r.addedByTeacher === true,
     };
   });
   return { questions, ids };
 }
 
 /**
- * Everything the teacher should look at before teaching:
- *  - review.issues (shape not seen yet, so read loosely: message/description/summary,
- *    and a question id or index when it is about a quiz question)
- *  - review.questionChecks where answerIsCorrect is false
- *  - teacher.teacherWarnings
+ * Everything the teacher should look at before teaching. Shapes (Oct 2026):
+ *   review.issues[]          { severity, category, target: "lesson"|"quiz", location: "<section>"|"q3", problem, suggestedFix }
+ *   review.questionChecks[]  { id, answerIsCorrect, ... }
+ *   teacher.teacherWarnings[] { target, message }  (the collator's teacher-friendly wording of the open issues)
+ *
+ * Shown:
+ *  - review issues that point at one quiz question, on that question (the reviewer's own words);
+ *  - questions whose marked answer may be wrong;
+ *  - the teacher warnings, on the Lesson or Quiz tab by target. They restate the reviewer's other
+ *    issues in plain words, so those raw issues are shown only when there are no warnings.
  */
-function toIssues(review: Raw, teacher: Raw, quizIds: string[]): ReviewIssue[] {
-  const indexOf = (r: Raw): number | undefined => {
-    const id = str(r.questionId, r.question_id, r.id, r.target);
-    const byId = id ? quizIds.indexOf(id) : -1;
-    if (byId >= 0) return byId;
-    return num(r.questionIndex, r.question_index, r.index);
+function toIssues(review: Raw, teacher: Raw, quizIds: string[], removedIds: string[]): ReviewIssue[] {
+  /** Index of the question an issue is about; REMOVED when the teacher has removed that question. */
+  const REMOVED = -1;
+  const questionIndex = (r: Raw): number | undefined => {
+    for (const v of [r.questionId, r.question_id, r.location, r.id]) {
+      // "q3", "Q3" and "question 3" all mean the question with id q3, wherever it now sits.
+      const raw = str(v);
+      const m = /^(?:q|question\s*)(\d+)$/i.exec(raw);
+      const id = m ? `q${m[1]}` : raw;
+      if (!id) continue;
+      const byId = quizIds.indexOf(id);
+      if (byId >= 0) return byId;
+      if (removedIds.includes(id)) return REMOVED;
+    }
+    return num(r.questionIndex, r.question_index);
   };
+  const sectionOf = (r: Raw): ReviewIssue["section"] => {
+    const k = key(r.target ?? r.section ?? r.area);
+    return k === "quiz" ? "quiz" : k === "notes" ? "notes" : "lesson";
+  };
+  const textOf = (r: Raw) =>
+    str(r.message, r.problem, r.userMessage, r.description, r.summary, r.detail) || "Please check this part.";
 
-  const issues: ReviewIssue[] = arr(review.issues).map((x) => {
+  const pinned: ReviewIssue[] = [];
+  const general: ReviewIssue[] = [];
+  for (const x of arr(review.issues)) {
     const r = typeof x === "string" ? { message: x } : obj(x);
-    const index = indexOf(r);
-    const section = key(r.section ?? r.area);
-    return {
-      section: index !== undefined || section === "quiz" ? "quiz" : section === "notes" ? "notes" : "lesson",
-      index,
-      message: str(r.message, r.userMessage, r.description, r.summary, r.detail) || "Please check this part.",
-    };
-  });
+    const index = questionIndex(r);
+    if (index === REMOVED) continue;
+    if (index !== undefined) pinned.push({ section: "quiz", index, message: textOf(r) });
+    else general.push({ section: sectionOf(r), message: textOf(r) });
+  }
 
   for (const c of arr(review.questionChecks ?? review.question_checks)) {
     const r = obj(c);
     if (r.answerIsCorrect === false || r.answer_is_correct === false) {
-      const index = indexOf(r);
-      if (index !== undefined && !issues.some((i) => i.section === "quiz" && i.index === index)) {
-        issues.push({ section: "quiz", index, message: "The marked answer may be wrong." });
+      const index = questionIndex(r);
+      if (index !== undefined && index !== REMOVED && !pinned.some((i) => i.index === index)) {
+        pinned.push({ section: "quiz", index, message: "The marked answer may be wrong." });
       }
     }
   }
 
-  for (const w of strings(teacher.teacherWarnings ?? teacher.teacher_warnings)) {
-    issues.push({ section: "lesson", message: w });
-  }
-  return issues;
+  const warnings: ReviewIssue[] = arr(teacher.teacherWarnings ?? teacher.teacher_warnings)
+    .map((x) => (typeof x === "string" ? { message: x } : obj(x)))
+    .map((r) => ({ section: sectionOf(r), index: questionIndex(r), message: textOf(r) }))
+    .filter((w) => w.message && w.index !== REMOVED);
+
+  return [...pinned, ...(warnings.length ? warnings : general)];
 }
 
 // ---------- public ----------
@@ -221,6 +249,7 @@ export interface PackFallback {
   topic?: string;
   grade?: Grade;
   createdAt?: string;
+  subject?: string;
 }
 
 export function toPackSummary(json: unknown, fallback: PackFallback = {}): PackSummary {
@@ -230,6 +259,7 @@ export function toPackSummary(json: unknown, fallback: PackFallback = {}): PackS
     id: str(raw.id, raw.job_id, raw.jobId, fallback.id),
     topic: str(raw.topic, raw.title, fallback.topic) || "Untitled lesson",
     grade: grade !== undefined ? toGrade(grade) : (fallback.grade ?? 1),
+    subject: str(raw.subject, fallback.subject),
     status: toStatus(raw),
     createdAt: str(raw.createdAt, raw.created_at, fallback.createdAt) || new Date().toISOString(),
     ...(key(raw.status) === "unavailable" ? { failureKind: "unavailable" as const } : {}),
@@ -244,13 +274,24 @@ export function toPack(json: unknown, fallback: PackFallback = {}): Pack {
   const review = obj(result.review);
   const teacher = obj(result.teacher);
   const { questions, ids } = toQuiz(result.quiz);
-  const issues = toIssues(review, teacher, ids);
+  const removedIds = arr(obj(result.quiz).removedQuestions).map((q) => str(obj(q).id));
+  const allIssues = toIssues(review, teacher, ids, removedIds);
+  const lessonChecked = lesson.teacherChecked === true;
+  const notesChecked = teacher.teacherChecked === true;
+  // Anything the teacher has checked (or fixed) no longer needs a look.
+  const issues = allIssues.filter((i) =>
+    i.section === "quiz" ? !(i.index !== undefined && questions[i.index]?.checked) : i.section === "lesson" ? !lessonChecked : !notesChecked,
+  );
+  const resolvedByTeacher = issues.length === 0 && allIssues.length > 0;
 
   // Any of these downgrades a finished pack to "Check before use".
   const flaggedByApi =
-    CHECK_VALUES.has(key(teacher.packStatus)) || CHECK_VALUES.has(key(review.verdict)) || issues.length > 0;
+    issues.length > 0 ||
+    (!resolvedByTeacher && (CHECK_VALUES.has(key(teacher.packStatus)) || CHECK_VALUES.has(key(review.verdict))));
   let status = summary.status;
   if (status === "ready" && flaggedByApi) status = "check";
+  // Every flagged item is in a part the teacher has now checked.
+  if (status === "check" && resolvedByTeacher) status = "ready";
 
   const error = raw.error;
   const unavailable =
@@ -268,6 +309,11 @@ export function toPack(json: unknown, fallback: PackFallback = {}): Pack {
     quiz: questions,
     notes: strings(teacher.teachingTips ?? teacher.teaching_tips),
     reviewed: key(review.verdict) === "approved" && issues.length === 0,
+    reviewedAt: str(raw.reviewedAt) || undefined,
+    lessonChecked,
+    lessonEdited: lesson.teacherEdited === true,
+    notesChecked,
+    notesEdited: teacher.teacherEdited === true,
     issues,
     // Only a field meant for teachers is shown; raw error text is often technical,
     // so it goes to the console and the screen shows the friendly default.
@@ -293,9 +339,26 @@ export function toPackList(json: unknown): PackSummary[] {
  * Body for POST /lesson-packs. The API's LessonPackRequest has only `topic` (1-200 chars)
  * and `grade` (1-12). Add `language` here once the API accepts it.
  */
-export function toCreateBody(req: { topic: string; grade: Grade; language: string; subject?: string }) {
+export function toCreateBody(req: { topic: string; grade: Grade; language: string; subject?: string }, force = false) {
   const subject = req.subject?.trim().slice(0, 60);
-  return { topic: req.topic.slice(0, 200), grade: req.grade, ...(subject ? { subject } : {}) };
+  return { topic: req.topic.slice(0, 200), grade: req.grade, ...(subject ? { subject } : {}), ...(force ? { force: true } : {}) };
+}
+
+/** Body for PUT /lesson-packs/{id}/lesson. Rows the API would reject as incomplete are left out. */
+export function toLessonBody(d: LessonDraft) {
+  const steps = d.activity?.steps.map((s) => s.trim()).filter(Boolean) ?? [];
+  return {
+    learningObjectives: d.objectives.map((o) => o.trim()).filter(Boolean),
+    sections: d.sections.map((s) => ({ title: s.title.trim(), body: s.body.trim() })).filter((s) => s.title && s.body),
+    vocabulary: d.vocabulary
+      .map((v) => ({ term: v.term.trim(), definition: v.definition.trim() }))
+      .filter((v) => v.term && v.definition),
+    activity:
+      d.activity && d.activity.title.trim() && steps.length
+        ? { title: d.activity.title.trim(), materials: d.activity.materials.map((m) => m.trim()).filter(Boolean), steps }
+        : null,
+    ...(d.overview !== undefined ? { overview: d.overview.trim() } : {}),
+  };
 }
 
 /** Reads the new pack's id from the POST response. */

@@ -38,11 +38,17 @@ export const offlineCache = {
   has(id: string): boolean {
     return id in readAll();
   },
+  remove(id: string) {
+    const all = readAll();
+    delete all[id];
+    writeAll(all);
+  },
   list(): PackSummary[] {
-    return Object.values(readAll()).map(({ id, topic, grade, status, createdAt }) => ({
+    return Object.values(readAll()).map(({ id, topic, grade, subject, status, createdAt }) => ({
       id,
       topic,
       grade,
+      subject: subject ?? "",
       status,
       createdAt,
     }));
@@ -66,6 +72,7 @@ export interface IndexEntry {
   id: string;
   topic: string;
   grade: Grade;
+  subject?: string;
   createdAt: string;
 }
 
@@ -83,6 +90,13 @@ export const packIndex = {
   },
   get(id: string): IndexEntry | undefined {
     return packIndex.all().find((e) => e.id === id);
+  },
+  remove(id: string) {
+    try {
+      localStorage.setItem(INDEX_KEY, JSON.stringify(packIndex.all().filter((e) => e.id !== id)));
+    } catch {
+      /* ignore */
+    }
   },
   add(entry: IndexEntry) {
     const list = [entry, ...packIndex.all().filter((e) => e.id !== entry.id)].slice(0, 200);
